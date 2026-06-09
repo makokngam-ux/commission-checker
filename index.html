@@ -328,6 +328,10 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:16px 0}
 .chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-size:13px;font-family:'Prompt';cursor:pointer;transition:.15s}
 .chip.active{background:var(--brand2);color:#fff;border-color:var(--brand2)}
 .del-x{border:0;background:transparent;color:var(--red);cursor:pointer;font-size:15px;font-weight:700}
+.ord{display:flex;flex-direction:column;gap:2px;align-items:center}
+.ord-btn{border:0;background:var(--slate-bg);color:var(--brand2);cursor:pointer;width:24px;height:16px;line-height:1;border-radius:4px;font-size:10px;padding:0;display:flex;align-items:center;justify-content:center}
+.ord-btn:hover{background:#bae6fd}
+.ord-btn.dis{background:transparent;color:#d0d7e2;cursor:default}
 .badge-count{background:var(--red);color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;margin-left:4px;font-family:'Prompt'}
 .spin{width:16px;height:16px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;display:inline-block;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -537,6 +541,11 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:16px 0}
         <button class="btn btn-primary" id="saveSettings"><svg class="icon icon-sm"><use href="#i-save"></use></svg>บันทึกการตั้งค่า</button>
         <button class="btn btn-ghost" id="testUrl"><svg class="icon icon-sm"><use href="#i-plug"></use></svg>ทดสอบการเชื่อมต่อ</button>
       </div>
+      <p class="hint" style="margin-top:10px">☁️ ซิงก์ข้ามเครื่องผ่าน Google Sheet — ปกติซิงก์อัตโนมัติ (ตอนบันทึก/แก้เรต/เปิดแอป) ปุ่มล่างไว้สั่งเองได้</p>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="syncUp"><svg class="icon icon-sm"><use href="#i-save"></use></svg>⬆️ ดันข้อมูลเครื่องนี้ขึ้น Sheet</button>
+        <button class="btn btn-ghost" id="syncDown"><svg class="icon icon-sm"><use href="#i-refresh"></use></svg>⬇️ ดึงข้อมูลจาก Sheet</button>
+      </div>
     </div>
     <div class="card">
       <h2><span class="title-icon"><svg class="icon"><use href="#i-save"></use></svg></span>สำรอง / กู้คืนข้อมูล</h2>
@@ -733,14 +742,14 @@ function computeRow(it){
     r.type='panel-longi'; r.label='แผง LONGi';
     return panelCalc(r, qty, sales, wpp, P.longiTiers);
   }
-  // 6) แผงเล็ก <130W
+  // 6) แผงเล็ก <130W — ขาย >เกณฑ์ ก็ยังได้เรตปกติ (0.20) นับเป็นค้างรับ/จ่ายได้ ไม่ตัดทิ้งเป็น "ต้องเช็ค"
   if(code.startsWith('STP6')||code.startsWith('HD-36')||code.startsWith('HD36')||(wpp>0&&wpp<=160)){
     r.type='panel-small'; r.label='แผงเล็ก <130W';
     const sp = P.smallPanel||{threshold:14,rate:0.20};
     const totalW = qty*wpp; const ppw = totalW? sales/totalW : 0;
-    if(totalW && ppw>=sp.threshold){ r.status='review'; r.expected=totalW*sp.rate;
-      r.method=`${fmt(totalW)}W · ขาย ${ppw.toFixed(2)}฿/W`; r.note=`ขายสูงกว่าเกณฑ์ <${sp.threshold}฿/W → ต้องสอบถามหัวหน้า`; return r; }
-    r.expected=totalW*sp.rate; r.method=`${fmt(totalW)}W × ${sp.rate}`; return r;
+    r.expected = totalW*sp.rate;
+    r.method = `${fmt(totalW)}W × ${sp.rate}` + (totalW&&ppw>=sp.threshold?` · ขาย ${ppw.toFixed(1)}฿/W (>เกณฑ์)`:'');
+    return r;
   }
   // 7) ไม่รู้จัก / อุปกรณ์เสริม (เซ็นเซอร์ SE1000-SEN, Gateway, Meter ฯลฯ)
   if(it.fileComm!=null){
@@ -1139,7 +1148,7 @@ $('#results').addEventListener('click', e=>{
   const editBtn=e.target.closest('[data-editsal]');
   if(editBtn){ const amt=editBtn.closest('[data-salrow]').querySelector('.sal-amt'); if(amt){ amt.focus(); amt.select(); } return; }
   const closeBtn=e.target.closest('[data-close]');
-  if(closeBtn){ if(!armAction(closeBtn,'ยืนยันปิด')) return; const k=closeBtn.dataset.close; setWatch(getWatch().filter(w=>w.key!==k)); closeBtn.closest('.watch').remove(); toast('ปิดรายการติดตามแล้ว'); return; }
+  if(closeBtn){ if(!armAction(closeBtn,'ยืนยันปิด')) return; const k=closeBtn.dataset.close; setWatch(getWatch().filter(w=>w.key!==k)); pushState(); closeBtn.closest('.watch').remove(); toast('ปิดรายการติดตามแล้ว'); return; }
   const tr=e.target.closest('tr.rowclick');
   if(tr) openRowModal(+tr.dataset.ri);
 });
@@ -1334,6 +1343,30 @@ const LS='ssc_comm_cfg';
 const getCfg=()=>{ try{return JSON.parse(localStorage.getItem(LS))||{}}catch{return {}} };
 const setCfg=c=>localStorage.setItem(LS,JSON.stringify(c));
 
+/* ===== ซิงก์ข้ามเครื่องผ่าน Google Sheet (ประวัติ+เรต+รายการค้าง) ===== */
+function appState(){ return JSON.stringify({ v:1, hist:getHist(), watch:getWatch(), rates:getPeriods() }); }
+let _pushT=null;
+function pushState(){                                  // ส่ง state ขึ้น Sheet (debounce กันยิงถี่)
+  const cfg=getCfg(); if(!cfg.url) return;
+  clearTimeout(_pushT);
+  _pushT=setTimeout(()=>{
+    fetch(cfg.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'savestate',state:appState()})}).catch(()=>{});
+  },700);
+}
+function pullState(cb){                                 // ดึง state จาก Sheet มาเขียนทับในเครื่อง
+  const cfg=getCfg(); if(!cfg.url){ cb&&cb(false); return; }
+  fetch(cfg.url+'?action=getstate').then(r=>r.json()).then(res=>{
+    if(res&&res.ok&&res.state){ try{ const s=JSON.parse(res.state);
+      if(Array.isArray(s.hist)) setHist(s.hist);
+      if(Array.isArray(s.watch)) setWatch(s.watch);
+      if(Array.isArray(s.rates)&&s.rates.length) savePeriods(s.rates);
+      cb&&cb(true); return;
+    }catch(e){} }
+    cb&&cb(false);
+  }).catch(()=>cb&&cb(false));
+}
+
 function gatherSalary(){
   const income={}, deduct={};
   $$('[data-salgroup="income"] [data-salrow]').forEach(row=>{ const n=row.querySelector('.sal-name').value.trim()||'รายรับ'; income[n]=parseNum(row.querySelector('.sal-amt').value); });
@@ -1361,6 +1394,7 @@ function saveCheck(model){
   const hist=getHist(); hist.push(rec); setHist(hist);
   // 2) อัปเดตรายการติดตามค้างข้ามเดือน
   commitWatch(model, month);
+  pushState();                                    // ซิงก์ขึ้น Sheet
   toast('บันทึกผลตรวจแล้ว — ดูได้ที่แท็บประวัติย้อนหลัง');
 
   // 3) ซิงก์ Google Sheet (ถ้าตั้งค่าไว้)
@@ -1394,10 +1428,13 @@ function loadHistory(){
     <div class="chart-flex" style="margin-top:6px"><div><canvas id="histPie" width="200" height="200"></canvas></div><div id="histLegend"></div></div>`;
   // ตารางสรุป
   h+=`<h3 style="font-family:'Prompt';font-size:15px;margin:22px 0 6px">${iconSm('folder')} รายการที่บันทึกไว้</h3>
-    <div class="tbl-wrap"><table><thead><tr><th>เดือน/รอบ</th><th>บันทึกเมื่อ</th><th class="num">ยอดขาย</th><th class="num">คอมจ่าย</th><th class="num">คอมค้าง</th><th class="num">เงินเดือนสุทธิ</th><th>ตรวจพบ</th><th></th></tr></thead><tbody>`;
-  hist.slice().reverse().forEach(x=>{
+    <div class="sub" style="margin:0 0 6px">เรียงตามลำดับนี้ (ใช้ ▲▼ ขยับเดือนขึ้น-ลง — มีผลกับกราฟเปรียบเทียบด้วย)</div>
+    <div class="tbl-wrap"><table><thead><tr><th>ลำดับ</th><th>เดือน/รอบ</th><th>บันทึกเมื่อ</th><th class="num">ยอดขาย</th><th class="num">คอมจ่าย</th><th class="num">คอมค้าง</th><th class="num">เงินเดือนสุทธิ</th><th>ตรวจพบ</th><th></th></tr></thead><tbody>`;
+  hist.forEach((x,i)=>{
     const ds=thDate(new Date(x.savedAt)); const flag=(+x.mismatchCount||0)+(+x.reviewCount||0);
-    h+=`<tr><td><b>${esc(x.month||'-')}</b></td><td><span class="method">${ds}</span></td><td class="num">${fmt(+x.totalSales||0)}</td><td class="num">${fmt(+x.paidComm||0)}</td><td class="num">${fmt(+x.pendingComm||0)}</td><td class="num"><b>${fmt(+x.net||0)}</b></td><td>${flag?`<span class="pill p-rev">${flag} จุด</span>`:'<span class="pill p-ok">✓</span>'}</td><td><button class="del-x" data-delhist="${x.id}" title="ลบ">${iconSm('trash')}</button></td></tr>`;
+    const up = i>0 ? `<button class="ord-btn" data-movehist="${x.id}" data-dir="-1" title="ขึ้น">▲</button>` : `<span class="ord-btn dis">▲</span>`;
+    const dn = i<hist.length-1 ? `<button class="ord-btn" data-movehist="${x.id}" data-dir="1" title="ลง">▼</button>` : `<span class="ord-btn dis">▼</span>`;
+    h+=`<tr><td><div class="ord">${up}${dn}</div></td><td><b>${esc(x.month||'-')}</b></td><td><span class="method">${ds}</span></td><td class="num">${fmt(+x.totalSales||0)}</td><td class="num">${fmt(+x.paidComm||0)}</td><td class="num">${fmt(+x.pendingComm||0)}</td><td class="num"><b>${fmt(+x.net||0)}</b></td><td>${flag?`<span class="pill p-rev">${flag} จุด</span>`:'<span class="pill p-ok">✓</span>'}</td><td><button class="del-x" data-delhist="${x.id}" title="ลบ">${iconSm('trash')}</button></td></tr>`;
   });
   h+='</tbody></table></div>';
   // รายการค้างที่ยังติดตามอยู่
@@ -1440,9 +1477,13 @@ function loadHistory(){
 }
 // persistent delegated handler (ผูกครั้งเดียว กันซ้อน)
 $('#historyBody').addEventListener('click',e=>{
+  // ขยับลำดับเดือน ▲▼
+  const mv=e.target.closest('[data-movehist]');
+  if(mv){ const mid=mv.dataset.movehist, dir=+mv.dataset.dir; const h=getHist(); const a=h.findIndex(x=>x.id===mid); const b=a+dir;
+    if(a>=0&&b>=0&&b<h.length){ const t=h[a]; h[a]=h[b]; h[b]=t; setHist(h); pushState(); loadHistory(); } return; }
   const delBtn=e.target.closest('[data-delhist]');
   const id=delBtn&&delBtn.dataset.delhist;
-  if(id){ if(!armAction(delBtn,'ยืนยันลบ')) return; setHist(getHist().filter(x=>x.id!==id)); loadHistory(); return; }
+  if(id){ if(!armAction(delBtn,'ยืนยันลบ')) return; setHist(getHist().filter(x=>x.id!==id)); pushState(); loadHistory(); return; }
   const i=e.target.dataset.month;
   if(i!=null){ const hist=getHist(); $$('#monthChips .chip').forEach(c=>c.classList.remove('active')); e.target.classList.add('active'); showBreakdown(hist[+i]); }
 });
@@ -1484,13 +1525,21 @@ drop.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) handleF
 function initSettings(){
   const cfg=getCfg(); $('#setName').value=cfg.name||DEFAULT_NAME; $('#setUrl').value=cfg.url||'';
 }
-$('#saveSettings').onclick=()=>{ setCfg({name:$('#setName').value.trim(),url:$('#setUrl').value.trim()}); toast('บันทึกการตั้งค่าแล้ว'); };
+$('#saveSettings').onclick=()=>{ setCfg({name:$('#setName').value.trim(),url:$('#setUrl').value.trim()}); toast('บันทึกการตั้งค่าแล้ว');
+  pullState(ok=>{ if(ok){ loadEditor(); if(!$('#tab-history').classList.contains('hide')) loadHistory(); toast('ดึงข้อมูลจาก Google Sheet มาแล้ว'); } }); };
 $('#testUrl').onclick=()=>{
   const url=$('#setUrl').value.trim(); if(!url){toast('ใส่ URL ก่อน','err');return;}
   toast('กำลังทดสอบ...');
   fetch(url+'?action=ping').then(r=>r.json()).then(res=>toast(res.ok?'เชื่อมต่อสำเร็จ':'ตอบกลับผิดปกติ',res.ok?'':'err')).catch(e=>toast('เชื่อมต่อไม่ได้: '+e.message,'err'));
 };
 $('#refreshHist').onclick=loadHistory;
+$('#syncUp').onclick=()=>{ const cfg=getCfg(); if(!cfg.url){toast('ใส่ URL ก่อน','err');return;}
+  toast('กำลังดันข้อมูลขึ้น...');
+  fetch(cfg.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'savestate',state:appState()})})
+    .then(r=>r.json()).then(res=>toast(res.ok?'ดันข้อมูลขึ้น Sheet แล้ว ✓':'ไม่สำเร็จ',res.ok?'':'err')).catch(e=>toast('ไม่สำเร็จ: '+e.message,'err')); };
+$('#syncDown').onclick=()=>{ const cfg=getCfg(); if(!cfg.url){toast('ใส่ URL ก่อน','err');return;}
+  toast('กำลังดึงข้อมูล...');
+  pullState(ok=>{ if(ok){ loadEditor(); if(!$('#tab-history').classList.contains('hide')) loadHistory(); toast('ดึงข้อมูลจาก Sheet แล้ว ✓'); } else toast('ไม่มีข้อมูลใน Sheet / เชื่อมต่อไม่ได้','err'); }); };
 
 /* ===== สำรอง / กู้คืนข้อมูล (ทุก key ใน localStorage ของแอป) ===== */
 const BACKUP_KEYS=['ssc_hist','ssc_watch','ssc_rate_periods_v2','ssc_comm_cfg'];
@@ -1511,7 +1560,7 @@ function importData(file){
     if(!dump||!dump.data||dump._app!=='ssc-commission-checker') throw new Error('ไม่ใช่ไฟล์สำรองของแอปนี้');
     if(!confirm('กู้คืนจะเขียนทับข้อมูลปัจจุบันทั้งหมด ยืนยันไหม?')) return;
     Object.entries(dump.data).forEach(([k,v])=>localStorage.setItem(k,String(v)));
-    initSettings(); loadEditor();
+    initSettings(); loadEditor(); pushState();
     toast('กู้คืนข้อมูลสำเร็จ ✓ (ไปดูที่แท็บประวัติได้เลย)');
   }catch(err){ toast('กู้คืนไม่สำเร็จ: '+err.message,'err'); } };
   rd.readAsText(file);
@@ -1596,11 +1645,16 @@ $('#spRate').oninput=e=>{ EDIT_PERIODS[curP].smallPanel=EDIT_PERIODS[curP].small
 $('#addPeriod').onclick=()=>{ EDIT_PERIODS.push({id:'p'+EDIT_PERIODS.length,name:'ชุดใหม่',from:'',to:'',inverters:[],optimizers:[],ppmTiers:[],leaptonTiers:[],longiTiers:[],smallPanel:{threshold:14,rate:0.20},outOfTable:'CLC1,SE-MTR,SE1000,HUMIDITY'}); curP=EDIT_PERIODS.length-1; renderEditor(); };
 $('#dupPeriod').onclick=()=>{ const c=JSON.parse(JSON.stringify(EDIT_PERIODS[curP])); c.name+=' (สำเนา)'; c.id='p'+Date.now()%100000; EDIT_PERIODS.splice(curP+1,0,c); curP++; renderEditor(); };
 $('#delPeriod').onclick=e=>{ if(EDIT_PERIODS.length<=1){ toast('ต้องมีอย่างน้อย 1 ชุด','err'); return; } if(!armAction(e.currentTarget,'ยืนยันลบชุด')) return; EDIT_PERIODS.splice(curP,1); if(curP>0)curP--; renderEditor(); };
-$('#saveRates').onclick=()=>{ savePeriods(EDIT_PERIODS); toast('บันทึกอัตราแล้ว — ตรวจไฟล์ครั้งต่อไปจะใช้เรตใหม่'); };
+$('#saveRates').onclick=()=>{ savePeriods(EDIT_PERIODS); pushState(); toast('บันทึกอัตราแล้ว — ตรวจไฟล์ครั้งต่อไปจะใช้เรตใหม่'); };
 $('#resetRates').onclick=e=>{ if(!armAction(e.currentTarget,'ยืนยันคืนค่า')) return; localStorage.removeItem(LS_RATES); curP=0; loadEditor(); toast('คืนค่าเริ่มต้นแล้ว'); };
 
 initSettings();
 loadEditor();
+
+/* ===== เปิดแอป: ดึงข้อมูลล่าสุดจาก Google Sheet (ซิงก์ข้ามเครื่อง) ===== */
+pullState(ok=>{ if(ok){ loadEditor();
+  if(!$('#tab-history').classList.contains('hide')) loadHistory();
+  toast('ซิงก์ข้อมูลจาก Google Sheet แล้ว'); } });
 
 /* ===== ลงทะเบียน Service Worker (PWA — ติดตั้ง + ออฟไลน์) ===== */
 /* ทำงานเฉพาะตอนเปิดผ่านเว็บ (http/https) เช่น GitHub Pages — เปิดผ่านไฟล์ file:// จะข้ามไป */
