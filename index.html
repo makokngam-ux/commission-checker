@@ -1465,8 +1465,15 @@ function loadHistory(){
     const ds=thDate(new Date(x.savedAt)); const flag=(+x.mismatchCount||0)+(+x.reviewCount||0);
     const up = i>0 ? `<button class="ord-btn" data-movehist="${x.id}" data-dir="-1" title="ขึ้น">▲</button>` : `<span class="ord-btn dis">▲</span>`;
     const dn = i<hist.length-1 ? `<button class="ord-btn" data-movehist="${x.id}" data-dir="1" title="ลง">▼</button>` : `<span class="ord-btn dis">▼</span>`;
-    const pend=+x.pendingComm||0;
-    const pendCell = pend>0 ? `<span class="pend-amt">${fmt(pend)}</span>` : `<span style="color:#94a3b8">0</span>`;
+    // คอมค้าง = ยอดที่ "ยังค้างจริงตอนนี้" (ลดลงเมื่อเดือนถัดไปจ่ายเข้ามา ดูจากรายการที่ยังอยู่ใน watch)
+    const pi=x.pendingItems||[];
+    const origPend=+x.pendingComm||0;
+    const liveRemain = pi.length ? pi.filter(it=>watchKeys.has(it.key)).reduce((s,it)=>s+(+it.exp||0),0) : origPend;
+    let pendCell;
+    if(origPend<=0) pendCell=`<span style="color:#94a3b8">0</span>`;
+    else if(pi.length && liveRemain===0) pendCell=`<span style="color:#16a34a;font-weight:700">✓ ได้รับครบ</span>`;
+    else if(pi.length && liveRemain<origPend) pendCell=`<span class="pend-amt">${fmt(liveRemain)}</span><br><span style="color:#94a3b8;font-size:11px">เดิม ${fmt(origPend)}</span>`;
+    else pendCell=`<span class="pend-amt">${fmt(liveRemain)}</span>`;
     const selCls = (selRec&&x.id===selRec.id)?' rec-sel':'';
     h+=`<tr class="recrow${selCls}" data-selid="${x.id}" title="คลิกเพื่อดูรายการค้างของเดือนนี้"><td><div class="ord">${up}${dn}</div></td><td><b>${esc(x.month||'-')}</b></td><td><span class="method">${ds}</span></td><td class="num">${fmt(+x.totalSales||0)}</td><td class="num">${fmt(+x.paidComm||0)}</td><td class="num">${pendCell}</td><td class="num"><b>${fmt(+x.net||0)}</b></td><td>${flag?`<span class="pill p-rev">${flag} จุด</span>`:'<span class="pill p-ok">✓</span>'}</td><td><button class="del-x" data-delhist="${x.id}" title="ลบ">${iconSm('trash')}</button></td></tr>`;
   });
@@ -1476,15 +1483,21 @@ function loadHistory(){
   if(selRec){
     const items=selRec.pendingItems||[];
     const itemsSum=items.reduce((s,it)=>s+(+it.exp||0),0);
-    h+=`<div class="wh-banner">${iconSm('search')}<span>รายการค้างของเดือน <b>${esc(selRec.month||'-')}</b> (ตอนตรวจ) — <b>${items.length}</b> รายการ · รวม <b>${fmt(itemsSum)} ฿</b></span><button class="wh-clear" data-whclear>✕ ปิด</button></div>`;
-    if(items.length){
-      h+=`<div class="tbl-wrap"><table><thead><tr><th>เลขใบสำคัญ</th><th>ลูกค้า</th><th>สินค้า</th><th class="num">จำนวน</th><th class="num">คอมค้าง</th><th>สถานะตอนนี้</th></tr></thead><tbody>`
-        + items.map(it=>{ const still=watchKeys.has(it.key);
-            return `<tr class="${still?'wh-hl':''}"><td><span class="method">${esc(it.inv||'-')}</span></td><td>${esc(String(it.cust).slice(0,24))}</td><td>${esc(it.code)}</td><td class="num">${it.qty!=null?fmt(it.qty):'-'}</td><td class="num">${fmt(it.exp||0)}</td><td>${still?'<span class="pill p-pend">⏳ ยังค้าง</span>':'<span class="pill p-ok">✓ ได้รับ/ปิดแล้ว</span>'}</td></tr>`;
-          }).join('')
-        + `</tbody></table></div>`;
+    const origP=+selRec.pendingComm||0;
+    if(!items.length && origP>0){
+      // record เก่า เก็บแต่ยอดรวม ยังไม่มีรายละเอียดรายการ
+      h+=`<div class="wh-banner" style="background:#fffbeb;border-color:#fde68a;color:#92400e">${iconSm('alert')}<span>เดือน <b>${esc(selRec.month||'-')}</b> มีคอมค้าง <b>${fmt(origP)} ฿</b> แต่ <b>บันทึกไว้ก่อนมีฟีเจอร์เก็บรายละเอียด</b> (เก็บแต่ยอดรวม) → วิธีแก้: <b>ลากไฟล์เดือนนี้เข้ามาตรวจใหม่ แล้วกด "บันทึกผลตรวจ"</b> รายการจะขึ้นครบ</span><button class="wh-clear" data-whclear>✕ ปิด</button></div>`;
     } else {
-      h+=`<div class="sub" style="color:#b45309;margin:0 0 6px">เดือนนี้ไม่มีรายการค้าง หรือบันทึกไว้ก่อนอัปเดตฟีเจอร์ — ลองตรวจเดือนนี้ใหม่แล้วกดบันทึก</div>`;
+      h+=`<div class="wh-banner">${iconSm('search')}<span>รายการค้างของเดือน <b>${esc(selRec.month||'-')}</b> (ตอนตรวจ) — <b>${items.length}</b> รายการ · รวม <b>${fmt(itemsSum)} ฿</b></span><button class="wh-clear" data-whclear>✕ ปิด</button></div>`;
+      if(items.length){
+        h+=`<div class="tbl-wrap"><table><thead><tr><th>เลขใบสำคัญ</th><th>ลูกค้า</th><th>สินค้า</th><th class="num">จำนวน</th><th class="num">คอมค้าง</th><th>สถานะตอนนี้</th></tr></thead><tbody>`
+          + items.map(it=>{ const still=watchKeys.has(it.key);
+              return `<tr class="${still?'wh-hl':''}"><td><span class="method">${esc(it.inv||'-')}</span></td><td>${esc(String(it.cust).slice(0,24))}</td><td>${esc(it.code)}</td><td class="num">${it.qty!=null?fmt(it.qty):'-'}</td><td class="num">${fmt(it.exp||0)}</td><td>${still?'<span class="pill p-pend">⏳ ยังค้าง</span>':'<span class="pill p-ok">✓ ได้รับ/ปิดแล้ว</span>'}</td></tr>`;
+            }).join('')
+          + `</tbody></table></div>`;
+      } else {
+        h+=`<div class="sub" style="margin:0 0 6px">เดือนนี้ไม่มีรายการค้าง (ทุกอย่างจ่ายครบ/ไม่มีค้าง)</div>`;
+      }
     }
   }
 
