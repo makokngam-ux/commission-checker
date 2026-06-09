@@ -261,6 +261,10 @@ tr.s-review{background:#fffbeb}
 .net-box .l .icon{vertical-align:-3px;margin-right:6px}
 .net-box .v{font-family:'Prompt';font-size:28px;font-weight:700}
 .net-box small{display:block;font-size:12px;opacity:.7;font-weight:400;font-family:'Sarabun'}
+.sal-cmp{margin-top:10px;border-radius:8px;padding:11px 14px;font-size:13.5px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.sal-cmp.ok{background:#dcfce7;color:#15803d}
+.sal-cmp.bad{background:#fff1f1;color:#b91c1c;border:1px solid #fecaca}
+.sal-cmp .icon{flex-shrink:0;margin-top:2px}
 
 /* chart */
 .chart-flex{display:grid;grid-template-columns:240px 1fr;gap:24px;align-items:center}
@@ -328,6 +332,17 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:16px 0}
 .chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font-size:13px;font-family:'Prompt';cursor:pointer;transition:.15s}
 .chip.active{background:var(--brand2);color:#fff;border-color:var(--brand2)}
 .del-x{border:0;background:transparent;color:var(--red);cursor:pointer;font-size:15px;font-weight:700}
+/* คอมค้าง สีส้มเด่น + คลิกเดือนไฮไลต์รายการค้าง */
+.pend-amt{color:#d97706;font-weight:700}
+tr.recrow{cursor:pointer;transition:background .12s}
+tr.recrow:hover td{background:#f8fafc}
+tr.rec-sel td{background:#fff7ed!important}
+tr.rec-sel td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
+tr.wh-hl td{background:#fff7ed!important}
+tr.wh-hl td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
+.wh-banner{display:flex;align-items:center;gap:8px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:8px;padding:9px 13px;margin:0 0 8px;font-size:13.5px}
+.wh-banner .icon{flex-shrink:0}
+.wh-clear{margin-left:auto;border:0;background:#9a3412;color:#fff;border-radius:6px;padding:4px 11px;font-size:12px;cursor:pointer;font-family:'Prompt';white-space:nowrap}
 .ord{display:flex;flex-direction:column;gap:2px;align-items:center}
 .ord-btn{border:0;background:var(--slate-bg);color:var(--brand2);cursor:pointer;width:24px;height:16px;line-height:1;border-radius:4px;font-size:10px;padding:0;display:flex;align-items:center;justify-content:center}
 .ord-btn:hover{background:#bae6fd}
@@ -831,6 +846,10 @@ function parseWorkbook(rows){
       const sSales=numAt(row,COL.sales), sComm=numAt(row,COL.comm), sWatt=numAt(row,COL.totalW);
       if(sSales!=null||sComm!=null){ summaryRows.push({label:txt.trim().slice(0,40), sales:sSales, watt:sWatt, comm:sComm}); continue; }
     }
+    // ----- ยอดเงินเดือนสุทธิที่บัญชีเขียนไว้ (อ่านจากคอลัมน์ U ค่าคอม ไม่ใช่ lastNum กันไปจับ note ที่มาร์คไว้) -----
+    if(/เงินเดือนทั้งสิ้น|ยอดเงินเดือน|เงินเดือนสุทธิ/.test(txt)){
+      const n=numAt(row,COL.comm); if(n!=null){ salary.fileNet=n; continue; }
+    }
     if(txt){
       for(const sk of SAL_KEYS){
         if(txt.includes(sk.k) && !(sk.k==='ภาษี' && txt.includes('ภ.ง.ด'))){
@@ -871,7 +890,7 @@ function runCheck(parsed){
   // รายการค้างที่ต้องติดตามข้ามเดือน: ช่องค่าคอมมีหมายเหตุ (ไม่ใช่ "ไม่จ่าย"/"ฟรี")
   const trackedPending = rows
     .filter(r=>r.fileComm==null && r.type!=='out' && r.pendingText && !/ไม่จ่าย|ฟรี/.test(r.pendingText))
-    .map(r=>({key:wkey(r.invoiceNo,r.customer), invoiceNo:r.invoiceNo, customer:r.customer,
+    .map(r=>({key:wkey(r.invoiceNo,r.customer,r.code), invoiceNo:r.invoiceNo, customer:r.customer,
               code:r.code, qty:r.qty, expected:r.expectedRounded, note:r.pendingText, date:thDate(r.date)}));
   // ตรวจรายการซ้ำ (ใบสำคัญ+รหัส+จำนวน+ยอดขาย ตรงกัน = อาจบันทึก/จ่ายซ้ำ)
   const dupMap={};
@@ -1006,7 +1025,7 @@ function render(model){
   html += renderSummaryCheck(model);
 
   // ---- salary check ----
-  html += renderSalary(inc, ded, commTotal);
+  html += renderSalary(inc, ded, commTotal, model.salary.fileNet);
 
   // ---- product commission chart ----
   html += renderProductCommission(model.breakdown);
@@ -1045,7 +1064,13 @@ function salRowHtml(type, name, amt){
     <button class="erow" data-editsal title="แก้ไขรายการ">${iconSm('edit')}</button>
   </div>`;
 }
-function renderSalary(inc, ded, commTotal){
+function salaryCompare(computed, fileNet){
+  if(fileNet==null) return '';
+  const diff=Math.round(computed)-Math.round(fileNet);
+  if(Math.abs(diff)<=1) return `<div class="sal-cmp ok">${iconSm('check')} ตรงกับยอดที่บัญชีเขียนในไฟล์ (${fmt(fileNet)} ฿)</div>`;
+  return `<div class="sal-cmp bad">${iconSm('alert')} <b>ไม่ตรงกับที่บัญชีเขียน</b> — บัญชีเขียน <b>${fmt(fileNet)} ฿</b> · ระบบคำนวณได้ <b>${fmt(computed)} ฿</b> · ต่าง <b>${fmt(Math.abs(diff))} ฿</b><br><span class="method">${diff>0?'บัญชีอาจจ่ายขาด → ฝากตรวจเอกสาร/ทักบัญชี':'บัญชีจ่ายเกินจากที่คำนวณ → ฝากตรวจเอกสาร'}</span></div>`;
+}
+function renderSalary(inc, ded, commTotal, fileNet){
   const income=Object.entries({...inc}); if(commTotal>0) income.push(['ค่าคอมมิชชั่น',commTotal]);
   const deduct=Object.entries({...ded});
   const incSum = income.reduce((s,[,v])=>s+v,0);
@@ -1067,6 +1092,7 @@ function renderSalary(inc, ded, commTotal){
       </div>
     </div>
     <div class="net-box"><div class="l">${iconSm('money')}เงินเดือนสุทธิ<small>รายรับ − หัก</small></div><div class="v" id="netVal">${fmt(incSum-dedSum)} ฿</div></div>
+    ${salaryCompare(incSum-dedSum, fileNet)}
   </div>`;
 }
 
@@ -1196,15 +1222,19 @@ function categoryBreakdown(rows){ const b={}; rows.filter(r=>r.fileComm!=null&&r
 const LS_HIST='ssc_hist', LS_WATCH='ssc_watch';
 const getHist=()=>{ try{return JSON.parse(localStorage.getItem(LS_HIST))||[]}catch{return[]} };
 const setHist=h=>localStorage.setItem(LS_HIST,JSON.stringify(h));
-const getWatch=()=>{ try{return JSON.parse(localStorage.getItem(LS_WATCH))||[]}catch{return[]} };
+const getWatch=()=>{ try{ let w=JSON.parse(localStorage.getItem(LS_WATCH))||[];
+  // migration: คีย์เก่า (2 ส่วน = ใบสำคัญ+ลูกค้า) → ล้าง ให้สร้างใหม่ด้วยคีย์ 3 ส่วน (รวมรหัสสินค้า)
+  if(w.length && w[0] && typeof w[0].key==='string' && w[0].key.split('|').length<3){ w=[]; localStorage.setItem(LS_WATCH,'[]'); }
+  return w; }catch{return[]} };
 const setWatch=w=>localStorage.setItem(LS_WATCH,JSON.stringify(w));
 // ชื่อลูกค้าเป็นภาษาไทย — ใช้ตัวแปลงที่เก็บอักษรไทยไว้ (norm() ตัดอักษรไทยทิ้ง ใช้กับรหัสสินค้าเท่านั้น)
 const normName=s=>String(s==null?'':s).replace(/\s+/g,'').toLowerCase();
-const wkey=(inv,cust)=>norm(inv)+'|'+normName(cust);   // คีย์จับคู่: เลขใบสำคัญ + ชื่อลูกค้า
+// คีย์จับคู่: เลขใบสำคัญ + ชื่อลูกค้า + รหัสสินค้า (ใบเดียวกันมีหลายสินค้า ต้องแยกกัน ไม่งั้นเก็บแค่ตัวแรก)
+const wkey=(inv,cust,code)=>norm(inv)+'|'+normName(cust)+'|'+norm(code);
 
 // เทียบรายการค้างที่จำไว้ กับไฟล์เดือนนี้
 function reconcileWatch(model){
-  const stored=getWatch(); const cur={}; model.rows.forEach(r=>{ cur[wkey(r.invoiceNo,r.customer)]=r; });
+  const stored=getWatch(); const cur={}; model.rows.forEach(r=>{ cur[wkey(r.invoiceNo,r.customer,r.code)]=r; });
   const paid=[], still=[], missing=[];
   stored.forEach(w=>{ const c=cur[w.key];
     if(!c) missing.push(w);                       // หายไปจากไฟล์ → ต้องเตือนเสมอ
@@ -1217,7 +1247,7 @@ function reconcileWatch(model){
 }
 // อัปเดตรายการติดตามหลังบันทึก: ลบที่ได้รับแล้ว / เก็บที่ยังค้าง+หาย / เพิ่มที่ค้างใหม่
 function commitWatch(model, month){
-  const stored=getWatch(); const cur={}; model.rows.forEach(r=>{ cur[wkey(r.invoiceNo,r.customer)]=r; });
+  const stored=getWatch(); const cur={}; model.rows.forEach(r=>{ cur[wkey(r.invoiceNo,r.customer,r.code)]=r; });
   let next=stored.filter(w=>{ const c=cur[w.key]; return !(c&&c.fileComm!=null); }); // ตัดที่จ่ายแล้วออก
   const keys=new Set(next.map(w=>w.key));
   (model.trackedPending||[]).forEach(p=>{ if(!keys.has(p.key)){ next.push({...p, sinceMonth:month||''}); keys.add(p.key); } });
@@ -1385,6 +1415,9 @@ function saveCheck(model){
     breakdown:model.breakdown||{},
     mismatchCount:model.rows.filter(r=>r.status==='mismatch').length,
     reviewCount:model.rows.filter(r=>r.status==='review').length,
+    // เก็บรายการค้างของเดือนนี้ไว้ (snapshot) — ไว้โชว์ตอนคลิกเดือน
+    pendingItems:model.rows.filter(r=>r.status==='pending'&&r.type!=='out')
+      .map(r=>({inv:r.invoiceNo,cust:r.customer,code:r.code,qty:r.qty,exp:r.expectedRounded,key:wkey(r.invoiceNo,r.customer,r.code)})),
   };
   // 1) บันทึกในเครื่อง (ใช้ทำกราฟย้อนหลัง)
   const hist=getHist(); hist.push(rec); setHist(hist);
@@ -1406,11 +1439,13 @@ function saveCheck(model){
   }
 }
 
-let histBarChart=null, histPieChart=null;
+let histBarChart=null, histPieChart=null, selRecId=null;
 function loadHistory(){
   const body=$('#historyBody');
   const hist=getHist();
   const watch=getWatch();
+  const selRec = selRecId ? hist.find(x=>x.id===selRecId) : null;      // เดือนที่เลือกดูรายการค้าง
+  const watchKeys = new Set(watch.map(w=>w.key));                      // รายการที่ยังติดตามอยู่ (ยังไม่จ่าย)
   if(!hist.length){
     body.innerHTML=`<div class="empty"><div class="ic">${icon('folder')}</div><p style="margin-top:10px">ยังไม่มีประวัติ — ตรวจไฟล์แล้วกด "บันทึกผลตรวจ" สัก 1-2 เดือนเพื่อดูกราฟเปรียบเทียบ</p></div>`;
     return;
@@ -1430,13 +1465,34 @@ function loadHistory(){
     const ds=thDate(new Date(x.savedAt)); const flag=(+x.mismatchCount||0)+(+x.reviewCount||0);
     const up = i>0 ? `<button class="ord-btn" data-movehist="${x.id}" data-dir="-1" title="ขึ้น">▲</button>` : `<span class="ord-btn dis">▲</span>`;
     const dn = i<hist.length-1 ? `<button class="ord-btn" data-movehist="${x.id}" data-dir="1" title="ลง">▼</button>` : `<span class="ord-btn dis">▼</span>`;
-    h+=`<tr><td><div class="ord">${up}${dn}</div></td><td><b>${esc(x.month||'-')}</b></td><td><span class="method">${ds}</span></td><td class="num">${fmt(+x.totalSales||0)}</td><td class="num">${fmt(+x.paidComm||0)}</td><td class="num">${fmt(+x.pendingComm||0)}</td><td class="num"><b>${fmt(+x.net||0)}</b></td><td>${flag?`<span class="pill p-rev">${flag} จุด</span>`:'<span class="pill p-ok">✓</span>'}</td><td><button class="del-x" data-delhist="${x.id}" title="ลบ">${iconSm('trash')}</button></td></tr>`;
+    const pend=+x.pendingComm||0;
+    const pendCell = pend>0 ? `<span class="pend-amt">${fmt(pend)}</span>` : `<span style="color:#94a3b8">0</span>`;
+    const selCls = (selRec&&x.id===selRec.id)?' rec-sel':'';
+    h+=`<tr class="recrow${selCls}" data-selid="${x.id}" title="คลิกเพื่อดูรายการค้างของเดือนนี้"><td><div class="ord">${up}${dn}</div></td><td><b>${esc(x.month||'-')}</b></td><td><span class="method">${ds}</span></td><td class="num">${fmt(+x.totalSales||0)}</td><td class="num">${fmt(+x.paidComm||0)}</td><td class="num">${pendCell}</td><td class="num"><b>${fmt(+x.net||0)}</b></td><td>${flag?`<span class="pill p-rev">${flag} จุด</span>`:'<span class="pill p-ok">✓</span>'}</td><td><button class="del-x" data-delhist="${x.id}" title="ลบ">${iconSm('trash')}</button></td></tr>`;
   });
   h+='</tbody></table></div>';
-  // รายการค้างที่ยังติดตามอยู่
+
+  // ----- คลิกเดือน → โชว์รายการค้างของเดือนนั้น (snapshot ตอนตรวจ) + สถานะปัจจุบัน -----
+  if(selRec){
+    const items=selRec.pendingItems||[];
+    const itemsSum=items.reduce((s,it)=>s+(+it.exp||0),0);
+    h+=`<div class="wh-banner">${iconSm('search')}<span>รายการค้างของเดือน <b>${esc(selRec.month||'-')}</b> (ตอนตรวจ) — <b>${items.length}</b> รายการ · รวม <b>${fmt(itemsSum)} ฿</b></span><button class="wh-clear" data-whclear>✕ ปิด</button></div>`;
+    if(items.length){
+      h+=`<div class="tbl-wrap"><table><thead><tr><th>เลขใบสำคัญ</th><th>ลูกค้า</th><th>สินค้า</th><th class="num">จำนวน</th><th class="num">คอมค้าง</th><th>สถานะตอนนี้</th></tr></thead><tbody>`
+        + items.map(it=>{ const still=watchKeys.has(it.key);
+            return `<tr class="${still?'wh-hl':''}"><td><span class="method">${esc(it.inv||'-')}</span></td><td>${esc(String(it.cust).slice(0,24))}</td><td>${esc(it.code)}</td><td class="num">${it.qty!=null?fmt(it.qty):'-'}</td><td class="num">${fmt(it.exp||0)}</td><td>${still?'<span class="pill p-pend">⏳ ยังค้าง</span>':'<span class="pill p-ok">✓ ได้รับ/ปิดแล้ว</span>'}</td></tr>`;
+          }).join('')
+        + `</tbody></table></div>`;
+    } else {
+      h+=`<div class="sub" style="color:#b45309;margin:0 0 6px">เดือนนี้ไม่มีรายการค้าง หรือบันทึกไว้ก่อนอัปเดตฟีเจอร์ — ลองตรวจเดือนนี้ใหม่แล้วกดบันทึก</div>`;
+    }
+  }
+
+  // รายการค้างที่ยังติดตามอยู่ทั้งหมด (live)
   if(watch.length){
     const watchTotal=watch.reduce((s,w)=>s+(+w.expected||0),0);
     h+=`<h3 style="font-family:'Prompt';font-size:15px;margin:22px 0 6px">${iconSm('refresh')} รายการค้างที่กำลังติดตาม (${watch.length}) · รวม <span style="color:var(--green)">${fmt(watchTotal)} ฿</span></h3>
+      <div class="sub" style="margin:0 0 6px">💡 คลิกแถว <b>เดือน</b> ด้านบน เพื่อดูเฉพาะรายการค้างของเดือนนั้น + เช็คว่าได้รับคอมแล้วหรือยัง</div>
       <div class="tbl-wrap"><table><thead><tr><th>เลขใบสำคัญ</th><th>ลูกค้า</th><th>สินค้า</th><th class="num">จำนวน</th><th class="num">คอมที่จะได้</th><th>ค้างตั้งแต่ (วันที่เอกสาร)</th></tr></thead><tbody>`
       + watch.map(w=>`<tr><td><span class="method">${esc(w.invoiceNo||'-')}</span></td><td>${esc(String(w.customer).slice(0,24))}</td><td>${esc(w.code)}</td><td class="num">${w.qty!=null?fmt(w.qty):'-'}</td><td class="num">${fmt(w.expected||0)}</td><td><span class="method">${esc(w.date||w.sinceMonth||'-')}</span></td></tr>`).join('')
       + `</tbody><tfoot><tr><td colspan="4" style="text-align:right;font-weight:600">รวมคอมค้างทั้งหมด</td><td class="num" style="font-weight:700;color:var(--green)">${fmt(watchTotal)} ฿</td><td></td></tr></tfoot></table></div>`;
@@ -1480,6 +1536,11 @@ $('#historyBody').addEventListener('click',e=>{
   const delBtn=e.target.closest('[data-delhist]');
   const id=delBtn&&delBtn.dataset.delhist;
   if(id){ if(!armAction(delBtn,'ยืนยันลบ')) return; setHist(getHist().filter(x=>x.id!==id)); pushState(); loadHistory(); return; }
+  // ล้างการไฮไลต์
+  if(e.target.closest('[data-whclear]')){ selRecId=null; loadHistory(); return; }
+  // คลิกแถวเดือน → โชว์รายการค้างของเดือนนั้น (คลิกซ้ำ = ปิด)
+  const rec=e.target.closest('.recrow');
+  if(rec){ const sid=rec.dataset.selid||''; selRecId=(selRecId===sid&&sid)?null:(sid||null); loadHistory(); return; }
   const i=e.target.dataset.month;
   if(i!=null){ const hist=getHist(); $$('#monthChips .chip').forEach(c=>c.classList.remove('active')); e.target.classList.add('active'); showBreakdown(hist[+i]); }
 });
