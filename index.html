@@ -418,10 +418,6 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:16px 0}
         <p>Sales Target 2026 Commission Checker · บริษัท สยาม โซล่าร์ เซลล์ จำกัด</p>
       </div>
     </div>
-    <div class="top-actions">
-      <button class="btn btn-primary" onclick="document.querySelector('#fileInput').click()"><svg class="icon icon-sm"><use href="#i-upload"></use></svg>อัปโหลดไฟล์</button>
-      <div class="profile"><span class="avatar"><svg class="icon icon-sm"><use href="#i-user"></use></svg></span><span>พนักงานขาย</span></div>
-    </div>
   </header>
 
   <!-- ============ TAB: CHECK ============ -->
@@ -430,7 +426,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:16px 0}
       <div class="hero-panel">
         <div class="hero-copy">
           <div class="hero-label"><svg class="icon icon-sm"><use href="#i-trend"></use></svg>Commission Control Center</div>
-          <h2>ตรวจเงินให้ครบก่อนเซ็นรับ</h2>
+          <h2>ตรวจค่าคอม &amp; เงินเดือน ครบในหน้าเดียว</h2>
           <p>นำไฟล์ค่าคอมจากบัญชีมาอัปโหลด ระบบจะคำนวณค่าคอมที่ควรได้ เทียบกับช่องที่บัญชีคิด แยกคอมพร้อมจ่าย คอมค้างรับ และคำนวณเงินเดือนสุทธิในหน้าเดียว</p>
           <div class="hero-steps">
             <div class="step-card"><b>01</b><span>อัปโหลดไฟล์ Excel</span></div>
@@ -1451,11 +1447,11 @@ function loadHistory(){
   if(histBarChart) histBarChart.destroy();
   const barValueLabels={ id:'barValueLabels', afterDatasetsDraw(chart){
     const ctx=chart.ctx; ctx.save();
-    ctx.font='700 9px Sarabun, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.font='700 11px Sarabun, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='bottom';
     chart.data.datasets.forEach((ds,di)=>{ const meta=chart.getDatasetMeta(di); if(meta.hidden) return;
       meta.data.forEach((bar,i)=>{ const v=+ds.data[i]||0; if(!v) return;
-        const lab = v>=1000 ? (Math.round(v/100)/10)+'k' : String(Math.round(v));
-        ctx.fillStyle=ds.backgroundColor; ctx.fillText(lab, bar.x, bar.y-2);
+        const lab = v>=1000 ? (Math.round(v/100)/10).toLocaleString()+'k' : String(Math.round(v));
+        ctx.fillStyle=ds.backgroundColor; ctx.fillText(lab, bar.x, bar.y-3);
       });
     });
     ctx.restore();
