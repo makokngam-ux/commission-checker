@@ -1,0 +1,16 @@
+{
+  "name": "ตรวจค่าคอม SSC",
+  "short_name": "ค่าคอม SSC",
+  "description": "ตรวจค่าคอมมิชชั่น + เงินเดือน SSC ตาม Sales Target 2026",
+  "lang": "th",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
