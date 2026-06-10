@@ -450,26 +450,26 @@ tr.wh-hl td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
           </div>
         </div>
         <div class="hero-visual">
-          <div class="visual-head"><b>เดือนล่าสุด</b><span>Preview</span></div>
+          <div class="visual-head"><b id="dashLatestMonth">เดือนล่าสุด</b><span id="dashLatestTag">ยังไม่มีข้อมูล</span></div>
           <div class="donut-row">
-            <div class="hero-donut"><strong>92%</strong></div>
-            <div>
-              <div class="mini-stat"><b>คอมพร้อมจ่าย</b><span>รายการที่บัญชีใส่ยอดแล้ว</span></div>
+            <div class="hero-donut"><strong id="dashDonut">—</strong></div>
+            <div id="dashMini">
+              <div class="mini-stat"><b>คอมพร้อมจ่าย</b><span>อัปไฟล์แล้วบันทึกเพื่อดูยอดจริง</span></div>
               <div class="mini-stat"><b>คอมค้างรับ</b><span>รายการรอลูกค้าชำระ</span></div>
             </div>
           </div>
-          <div class="spark-bars" aria-hidden="true">
+          <div class="spark-bars" id="dashSpark" aria-hidden="true">
             <i style="height:42%"></i><i style="height:68%"></i><i style="height:52%"></i><i style="height:82%"></i><i style="height:64%"></i><i style="height:90%"></i><i style="height:58%"></i>
           </div>
         </div>
       </div>
       <div class="status-panel">
         <h3>Commission Health</h3>
-        <div class="progress-line"><div class="progress-track"><i style="width:78%"></i></div><strong>78%</strong></div>
-        <div class="progress-line"><div class="progress-track"><i style="width:65%"></i></div><strong>65%</strong></div>
-        <div class="progress-line"><div class="progress-track"><i style="width:37%"></i></div><strong>37%</strong></div>
-        <div class="status-pill-row"><span class="status-pill ready">พร้อมตรวจ</span><span class="status-pill">รอบเงินเดือน</span><span class="status-pill">คอมค้าง</span></div>
-        <p class="sub" style="margin:14px 0 0">สถานะนี้จะชัดขึ้นหลังอัปโหลดไฟล์และบันทึกประวัติรายเดือน</p>
+        <div id="dashHealth">
+          <div class="progress-line"><div class="progress-track"><i style="width:0%"></i></div><strong>—</strong></div>
+          <div class="status-pill-row"><span class="status-pill">ยังไม่มีข้อมูล</span></div>
+          <p class="sub" style="margin:14px 0 0">สถานะนี้จะชัดขึ้นหลังอัปโหลดไฟล์และบันทึกประวัติรายเดือน</p>
+        </div>
       </div>
     </div>
     <div class="dashboard-charts">
@@ -481,13 +481,8 @@ tr.wh-hl td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
           </div>
           <span class="period">6 เดือนล่าสุด</span>
         </div>
-        <div class="month-bars">
-          <div class="month-bar"><div class="bar-stack" style="--h:48%;--p:26%"></div><b>ม.ค.</b></div>
-          <div class="month-bar"><div class="bar-stack" style="--h:64%;--p:34%"></div><b>ก.พ.</b></div>
-          <div class="month-bar"><div class="bar-stack" style="--h:58%;--p:18%"></div><b>มี.ค.</b></div>
-          <div class="month-bar"><div class="bar-stack" style="--h:76%;--p:28%"></div><b>เม.ย.</b></div>
-          <div class="month-bar"><div class="bar-stack" style="--h:88%;--p:22%"></div><b>พ.ค.</b></div>
-          <div class="month-bar"><div class="bar-stack" style="--h:72%;--p:31%"></div><b>มิ.ย.</b></div>
+        <div class="month-bars" id="dashMonthBars">
+          <div class="month-bar"><div class="bar-stack" style="--h:0%;--p:0%"></div><b>—</b></div>
         </div>
         <div class="chart-legend"><span><i class="legend-dot"></i>คอมพร้อมจ่าย</span><span><i class="legend-dot pending"></i>คอมค้างรับ</span></div>
       </div>
@@ -498,11 +493,8 @@ tr.wh-hl td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
             <p class="sub" style="margin:6px 0 0">ดูสัดส่วนค่าคอมตามหมวดสินค้า</p>
           </div>
         </div>
-        <div class="product-bars">
-          <div class="product-row"><b>Inverter</b><div class="product-track"><i style="--w:82%"></i></div><span>82%</span></div>
-          <div class="product-row"><b>Optimizer</b><div class="product-track"><i style="--w:64%"></i></div><span>64%</span></div>
-          <div class="product-row"><b>แผง PPM</b><div class="product-track"><i style="--w:47%"></i></div><span>47%</span></div>
-          <div class="product-row"><b>Leapton</b><div class="product-track"><i style="--w:35%"></i></div><span>35%</span></div>
+        <div class="product-bars" id="dashProducts">
+          <div class="product-row"><b>—</b><div class="product-track"><i style="--w:0%"></i></div><span>ยังไม่มีข้อมูล</span></div>
         </div>
       </div>
     </div>
@@ -615,6 +607,18 @@ tr.wh-hl td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
   <div class="modal-sheet">
     <div class="modal-head"><b id="rowModalTitle"></b><button class="modal-x" data-mclose title="ปิด">✕</button></div>
     <div id="rowModalBody"></div>
+  </div>
+</div>
+
+<div id="confirmModal" class="modal hide">
+  <div class="modal-overlay" data-cclose></div>
+  <div class="modal-sheet" style="max-width:430px">
+    <div class="modal-head"><b id="confirmTitle">ยืนยันบันทึก</b><button class="modal-x" data-cclose title="ปิด">✕</button></div>
+    <div id="confirmBody"></div>
+    <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">
+      <button class="btn btn-ghost" data-cclose>ยกเลิก</button>
+      <button class="btn btn-primary" id="confirmOk">ยืนยันบันทึก</button>
+    </div>
   </div>
 </div>
 
@@ -1214,7 +1218,19 @@ $('#results').addEventListener('click', e=>{
   if(tr) openRowModal(+tr.dataset.ri);
 });
 $('#rowModal').addEventListener('click', e=>{ if(e.target.closest('[data-mclose]')) closeRowModal(); });
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeRowModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeRowModal(); closeConfirm(); } });
+
+// ===== ป็อปอัพยืนยันทั่วไป =====
+function showConfirm(title, bodyHtml, onOk, okDisabled){
+  $('#confirmTitle').textContent=title;
+  $('#confirmBody').innerHTML=bodyHtml;
+  const ok=$('#confirmOk');
+  ok.disabled = !!okDisabled || !onOk;
+  ok.onclick=()=>{ closeConfirm(); if(onOk) onOk(); };
+  $('#confirmModal').classList.remove('hide');
+}
+function closeConfirm(){ $('#confirmModal').classList.add('hide'); }
+$('#confirmModal').addEventListener('click', e=>{ if(e.target.closest('[data-cclose]')) closeConfirm(); });
 
 const CHART_COLORS=['#0ea5e9','#16a34a','#7c3aed','#f59e0b','#ec4899','#14b8a6','#f97316','#64748b'];
 function drawChart(inc, ded, commTotal){
@@ -1319,7 +1335,7 @@ function wireResultButtons(model){
   // event delegation ผูกครั้งเดียวด้านบนแล้ว — ตรงนี้แค่ตั้งปุ่มที่ต้องใช้ model (onclick = แทนที่ ไม่ซ้อน)
   recalcSalary();
   $('#newBtn').onclick=resetView;
-  $('#saveBtn').onclick=()=>saveCheck(model);
+  $('#saveBtn').onclick=()=>confirmSave(model);
   $('#reportBtn').onclick=()=>copyReport(model);
 }
 
@@ -1440,6 +1456,30 @@ function gatherSalary(){
   return {income, deduct, inc, ded};
 }
 
+// เด้งป็อปอัพยืนยันก่อนบันทึก — กันบันทึกผิดเดือน / เตือนถ้าเดือนซ้ำ (จะเขียนทับ)
+function confirmSave(model){
+  const cfg=getCfg();
+  const month=selectedPeriod();
+  const name=($('#metaName')?.value)||cfg.name||DEFAULT_NAME;
+  const sal=gatherSalary();
+  const exists=getHist().some(h=>month && h.month===month && (h.name||name)===name);
+  let body=`<div class="mrow big"><span class="mk">เดือน/รอบ</span><span class="mv" style="color:var(--brand2)">${esc(month||'— ยังไม่เลือก —')}</span></div>
+    <div class="mrow"><span class="mk">พนักงาน</span><span class="mv">${esc(name)}</span></div>
+    <div class="mrow"><span class="mk">คอมพร้อมจ่าย</span><span class="mv" style="color:#15803d">${fmt(model.paidComm)} ฿</span></div>
+    <div class="mrow"><span class="mk">คอมค้างรับ</span><span class="mv" style="color:#c2410c">${fmt(model.pendingComm)} ฿</span></div>
+    <div class="mrow"><span class="mk">เงินเดือนสุทธิ</span><span class="mv">${fmt(sal.inc-sal.ded)} ฿</span></div>`;
+  if(!month){
+    body+=`<div class="sal-cmp bad">${iconSm('alert')} <b>ยังไม่ได้เลือกเดือน/ปี</b> — กรุณาเลือกเดือนและปีด้านบนก่อนบันทึก</div>`;
+    showConfirm('บันทึกไม่ได้', body, null, true); return;
+  }
+  if(exists){
+    body+=`<div class="sal-cmp" style="background:#fffbeb;color:#92400e;border:1px solid #fde68a">${iconSm('alert')} <b>เดือน "${esc(month)}" มีบันทึกอยู่แล้ว</b><br>กดยืนยันจะ<b>เขียนทับ</b>ข้อมูลเดิมของเดือนนี้ (ไม่เพิ่มซ้ำ)</div>`;
+  } else {
+    body+=`<div class="sal-cmp ok">${iconSm('check')} ตรวจสอบเดือน/ยอดให้ถูกต้องก่อนยืนยัน</div>`;
+  }
+  showConfirm(exists?'ยืนยันเขียนทับเดือนนี้?':'ยืนยันบันทึกเดือนนี้?', body, ()=>saveCheck(model));
+}
+
 function saveCheck(model){
   const cfg=getCfg();
   const month=selectedPeriod();
@@ -1458,11 +1498,15 @@ function saveCheck(model){
     pendingItems:model.rows.filter(r=>r.status==='pending'&&r.type!=='out')
       .map(r=>({inv:r.invoiceNo,cust:r.customer,code:r.code,qty:r.qty,exp:r.expectedRounded,key:wkey(r.invoiceNo,r.customer,r.code)})),
   };
-  // 1) บันทึกในเครื่อง (ใช้ทำกราฟย้อนหลัง)
-  const hist=getHist(); hist.push(rec); setHist(hist);
+  // 1) บันทึกในเครื่อง (ใช้ทำกราฟย้อนหลัง) — upsert ตาม เดือน+ชื่อ: มีเดือนเดิม=เขียนทับ ไม่เพิ่มซ้ำ
+  const hist=getHist();
+  const idx=month ? hist.findIndex(h=>h.month===month && (h.name||name)===name) : -1;
+  if(idx>=0){ rec.id=hist[idx].id; hist[idx]=rec; } else { hist.push(rec); }
+  setHist(hist);
   // 2) อัปเดตรายการติดตามค้างข้ามเดือน
   commitWatch(model, month);
   pushState();                                    // ซิงก์ขึ้น Sheet
+  renderDashboard();                              // อัปเดตแดชบอร์ดหน้าแรกด้วยเลขจริง
   toast('บันทึกผลตรวจแล้ว — ดูได้ที่แท็บประวัติย้อนหลัง');
 
   // 3) ซิงก์ Google Sheet (ถ้าตั้งค่าไว้)
@@ -1475,6 +1519,65 @@ function saveCheck(model){
       .then(r=>r.json()).then(res=>{ if(res.ok) toast('ซิงก์ Google Sheet แล้ว'); else throw new Error(res.error||'error'); })
       .catch(err=>toast('ซิงก์ Sheet ไม่สำเร็จ (บันทึกในเครื่องแล้ว): '+err.message,'err'))
       .finally(()=>{ btn.disabled=false; btn.innerHTML=iconSm('save')+'บันทึกผลตรวจ'; });
+  }
+}
+
+// ====== แดชบอร์ดหน้าแรก: ดึงเลขจริงจากประวัติเดือนล่าสุด (แทนเลขตัวอย่าง) ======
+const TH_ABBR={'มกราคม':'ม.ค.','กุมภาพันธ์':'ก.พ.','มีนาคม':'มี.ค.','เมษายน':'เม.ย.','พฤษภาคม':'พ.ค.','มิถุนายน':'มิ.ย.','กรกฎาคม':'ก.ค.','สิงหาคม':'ส.ค.','กันยายน':'ก.ย.','ตุลาคม':'ต.ค.','พฤศจิกายน':'พ.ย.','ธันวาคม':'ธ.ค.'};
+function shortMonth(m){ if(!m) return '—'; const w=String(m).trim().split(/\s+/)[0]; return TH_ABBR[w]||w; }
+function renderDashboard(){
+  const hist=getHist();
+  const set=(id,html)=>{ const el=$('#'+id); if(el) el.innerHTML=html; };
+  const txt=(id,t)=>{ const el=$('#'+id); if(el) el.textContent=t; };
+  if(!hist.length){                                 // ไม่มีประวัติ → กลับเป็นสถานะ "ยังไม่มีข้อมูล"
+    txt('dashLatestMonth','เดือนล่าสุด'); txt('dashLatestTag','ยังไม่มีข้อมูล'); txt('dashDonut','—');
+    set('dashMini',`<div class="mini-stat"><b>คอมพร้อมจ่าย</b><span>อัปไฟล์แล้วบันทึกเพื่อดูยอดจริง</span></div><div class="mini-stat"><b>คอมค้างรับ</b><span>รายการรอลูกค้าชำระ</span></div>`);
+    set('dashHealth',`<div class="progress-line"><div class="progress-track"><i style="width:0%"></i></div><strong>—</strong></div><div class="status-pill-row"><span class="status-pill">ยังไม่มีข้อมูล</span></div><p class="sub" style="margin:14px 0 0">สถานะนี้จะชัดขึ้นหลังอัปโหลดไฟล์และบันทึกประวัติรายเดือน</p>`);
+    set('dashMonthBars',`<div class="month-bar"><div class="bar-stack" style="--h:0%;--p:0%"></div><b>—</b></div>`);
+    set('dashProducts',`<div class="product-row"><b>—</b><div class="product-track"><i style="--w:0%"></i></div><span>ยังไม่มีข้อมูล</span></div>`);
+    return;
+  }
+  const last=hist[hist.length-1];
+  const paid=+last.paidComm||0, pend=+last.pendingComm||0, tot=paid+pend;
+  const paidPct=tot>0?Math.round(paid/tot*100):0;
+
+  // เดือนล่าสุด (โดนัท + ยอดจริง)
+  txt('dashLatestMonth', last.month||'เดือนล่าสุด');
+  txt('dashLatestTag', 'ล่าสุด');
+  txt('dashDonut', paidPct+'%');
+  set('dashMini',
+    `<div class="mini-stat"><b>คอมพร้อมจ่าย</b><span style="color:#15803d;font-weight:700;font-size:14px">${fmt(paid)} ฿</span></div>
+     <div class="mini-stat"><b>คอมค้างรับ</b><span style="color:#c2410c;font-weight:700;font-size:14px">${fmt(pend)} ฿</span></div>`);
+
+  // spark: คอมรวม 7 เดือนล่าสุด
+  const spark=hist.slice(-7);
+  const sMax=Math.max(1,...spark.map(h=>(+h.paidComm||0)+(+h.pendingComm||0)));
+  set('dashSpark', spark.map(h=>{ const v=((+h.paidComm||0)+(+h.pendingComm||0))/sMax*100; return `<i style="height:${Math.max(6,Math.round(v))}%"></i>`; }).join(''));
+
+  // Commission Health: % คอมที่เก็บได้แล้ว 3 เดือนล่าสุด + ป้ายสถานะ
+  const h3=hist.slice(-3);
+  const healthBars=h3.map(h=>{ const t=(+h.paidComm||0)+(+h.pendingComm||0); const p=t>0?Math.round((+h.paidComm||0)/t*100):0;
+    return `<div class="progress-line"><span class="sub" style="width:38px;flex-shrink:0;font-size:12px">${esc(shortMonth(h.month))}</span><div class="progress-track"><i style="width:${p}%"></i></div><strong>${p}%</strong></div>`; }).join('');
+  const need=(+last.mismatchCount||0)+(+last.reviewCount||0);
+  const pendCount=(last.pendingItems||[]).length;
+  const pills=`<div class="status-pill-row">`
+    +(need>0?`<span class="status-pill" style="background:#fef3c7;color:#92400e">ต้องเช็ค ${need} รายการ</span>`:`<span class="status-pill ready">ผ่านการตรวจ</span>`)
+    +(pendCount>0?`<span class="status-pill" style="background:#ffedd5;color:#9a3412">คอมค้าง ${pendCount} รายการ</span>`:``)
+    +`<span class="status-pill">อัปเดต ${esc(shortMonth(last.month))}</span></div>`;
+  set('dashHealth', healthBars+pills+`<p class="sub" style="margin:14px 0 0">แถบ = % คอมที่<b>พร้อมจ่ายแล้ว</b>ของแต่ละเดือน (เทียบกับคอมรวมเดือนนั้น)</p>`);
+
+  // กราฟแท่ง 6 เดือนล่าสุด (เหลือง=ค้าง ซ้อนบนน้ำเงิน=พร้อมจ่าย)
+  const bars=hist.slice(-6);
+  const bMax=Math.max(1,...bars.map(h=>(+h.paidComm||0)+(+h.pendingComm||0)));
+  set('dashMonthBars', bars.map(h=>{ const t=(+h.paidComm||0)+(+h.pendingComm||0); const hpct=Math.round(t/bMax*100); const ppct=Math.round((+h.pendingComm||0)/bMax*100);
+    return `<div class="month-bar"><div class="bar-stack" style="--h:${Math.max(8,hpct)}%;--p:${ppct}%"></div><b>${esc(shortMonth(h.month))}</b></div>`; }).join(''));
+
+  // กราฟย่อยสินค้า: หมวดของเดือนล่าสุด (สูงสุด 5 หมวด)
+  const bd=last.breakdown||{};
+  const ents=Object.entries(bd).filter(e=>(+e[1])>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(ents.length){
+    const pMax=Math.max(...ents.map(e=>+e[1]));
+    set('dashProducts', ents.map(e=>{ const w=Math.round(e[1]/pMax*100); return `<div class="product-row"><b>${esc(e[0])}</b><div class="product-track"><i style="--w:${Math.max(6,w)}%"></i></div><span>${fmt(e[1])} ฿</span></div>`; }).join(''));
   }
 }
 
@@ -1584,10 +1687,10 @@ $('#historyBody').addEventListener('click',e=>{
   // ขยับลำดับเดือน ▲▼
   const mv=e.target.closest('[data-movehist]');
   if(mv){ const mid=mv.dataset.movehist, dir=+mv.dataset.dir; const h=getHist(); const a=h.findIndex(x=>x.id===mid); const b=a+dir;
-    if(a>=0&&b>=0&&b<h.length){ const t=h[a]; h[a]=h[b]; h[b]=t; setHist(h); pushState(); loadHistory(); } return; }
+    if(a>=0&&b>=0&&b<h.length){ const t=h[a]; h[a]=h[b]; h[b]=t; setHist(h); pushState(); loadHistory(); renderDashboard(); } return; }
   const delBtn=e.target.closest('[data-delhist]');
   const id=delBtn&&delBtn.dataset.delhist;
-  if(id){ if(!armAction(delBtn,'ยืนยันลบ')) return; setHist(getHist().filter(x=>x.id!==id)); pushState(); loadHistory(); return; }
+  if(id){ if(!armAction(delBtn,'ยืนยันลบ')) return; setHist(getHist().filter(x=>x.id!==id)); pushState(); loadHistory(); renderDashboard(); return; }
   // ล้างการไฮไลต์
   if(e.target.closest('[data-whclear]')){ selRecId=null; loadHistory(); return; }
   // คลิกแถวเดือน → โชว์รายการค้างของเดือนนั้น (คลิกซ้ำ = ปิด)
@@ -1759,9 +1862,10 @@ $('#resetRates').onclick=e=>{ if(!armAction(e.currentTarget,'ยืนยัน�
 
 initSettings();
 loadEditor();
+renderDashboard();                                // โชว์เลขจริงบนหน้าแรกตั้งแต่เปิดแอป
 
 /* ===== เปิดแอป: ดึงข้อมูลล่าสุดจาก Google Sheet (ซิงก์ข้ามเครื่อง) ===== */
-pullState(ok=>{ if(ok){ loadEditor();
+pullState(ok=>{ if(ok){ loadEditor(); renderDashboard();
   if(!$('#tab-history').classList.contains('hide')) loadHistory();
   toast('ซิงก์ข้อมูลจาก Google Sheet แล้ว'); } });
 
