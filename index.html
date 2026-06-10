@@ -109,6 +109,13 @@ header{padding:30px 0 22px;display:flex;align-items:flex-start;justify-content:s
 .bar-stack{width:100%;max-width:46px;height:var(--h);min-height:34px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,#7ccaff,var(--brand));position:relative;box-shadow:0 10px 18px rgba(47,158,232,.14)}
 .bar-stack:after{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--p);background:linear-gradient(180deg,#ffe27b,var(--yellow));border-radius:0 0 0 0}
 .month-bar b{font-family:'Prompt';font-size:12px;color:var(--muted)}
+.bar-val{font-family:'Prompt';font-size:11px;font-weight:700;color:#c2410c;background:#fff4ec;border:1px solid #ffd9c2;border-radius:999px;padding:1px 7px;white-space:nowrap;line-height:1.6}
+.bar-val.zero{color:#16a34a;background:#e9fbef;border-color:#bbf2cd}
+.recap-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.recap-tile{background:var(--blue-soft);border:1px solid var(--line);border-radius:8px;padding:13px 15px;display:flex;flex-direction:column;gap:4px}
+.recap-tile span{color:var(--muted);font-size:12px}
+.recap-tile b{font-family:'Prompt';font-size:19px}
+@media(max-width:720px){.recap-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;color:var(--muted);font-size:12.5px}
 .chart-legend span{display:inline-flex;align-items:center;gap:7px}
 .legend-dot{width:10px;height:10px;border-radius:3px;background:var(--brand)}
@@ -437,65 +444,29 @@ tr.wh-hl td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
 
   <!-- ============ TAB: CHECK ============ -->
   <section id="tab-check">
-    <div class="hero">
-      <div class="hero-panel">
-        <div class="hero-copy">
-          <div class="hero-label"><svg class="icon icon-sm"><use href="#i-trend"></use></svg>Commission Control Center</div>
-          <h2>ตรวจค่าคอม &amp; เงินเดือน ครบในหน้าเดียว</h2>
-          <p>นำไฟล์ค่าคอมจากบัญชีมาอัปโหลด ระบบจะคำนวณค่าคอมที่ควรได้ เทียบกับช่องที่บัญชีคิด แยกคอมพร้อมจ่าย คอมค้างรับ และคำนวณเงินเดือนสุทธิในหน้าเดียว</p>
-          <div class="hero-steps">
-            <div class="step-card"><b>01</b><span>อัปโหลดไฟล์ Excel</span></div>
-            <div class="step-card"><b>02</b><span>ตรวจจุดไม่ตรงอัตโนมัติ</span></div>
-            <div class="step-card"><b>03</b><span>บันทึกดูย้อนหลัง</span></div>
-          </div>
+    <div class="dash-chart" style="margin-bottom:18px">
+      <div class="dash-chart-head">
+        <div>
+          <h2><span class="title-icon"><svg class="icon"><use href="#i-chart"></use></svg></span>กราฟแท่งเปรียบเทียบรายเดือน</h2>
+          <p class="sub" style="margin:6px 0 0">เน้นยอด <b style="color:#c2410c">คอมค้างรับ</b> ของแต่ละเดือน — ดูว่ายังมีเดือนไหนค้างอยู่</p>
         </div>
-        <div class="hero-visual">
-          <div class="visual-head"><b id="dashLatestMonth">เดือนล่าสุด</b><span id="dashLatestTag">ยังไม่มีข้อมูล</span></div>
-          <div class="donut-row">
-            <div class="hero-donut"><strong id="dashDonut">—</strong></div>
-            <div id="dashMini">
-              <div class="mini-stat"><b>คอมพร้อมจ่าย</b><span>อัปไฟล์แล้วบันทึกเพื่อดูยอดจริง</span></div>
-              <div class="mini-stat"><b>คอมค้างรับ</b><span>รายการรอลูกค้าชำระ</span></div>
-            </div>
-          </div>
-          <div class="spark-bars" id="dashSpark" aria-hidden="true">
-            <i style="height:42%"></i><i style="height:68%"></i><i style="height:52%"></i><i style="height:82%"></i><i style="height:64%"></i><i style="height:90%"></i><i style="height:58%"></i>
-          </div>
-        </div>
+        <span class="period">6 เดือนล่าสุด</span>
       </div>
-      <div class="status-panel">
-        <h3>Commission Health</h3>
-        <div id="dashHealth">
-          <div class="progress-line"><div class="progress-track"><i style="width:0%"></i></div><strong>—</strong></div>
-          <div class="status-pill-row"><span class="status-pill">ยังไม่มีข้อมูล</span></div>
-          <p class="sub" style="margin:14px 0 0">สถานะนี้จะชัดขึ้นหลังอัปโหลดไฟล์และบันทึกประวัติรายเดือน</p>
-        </div>
+      <div class="month-bars" id="dashMonthBars">
+        <div class="month-bar"><div class="bar-stack" style="--h:0%;--p:0%"></div><b>—</b></div>
       </div>
+      <div class="chart-legend"><span><i class="legend-dot"></i>คอมพร้อมจ่าย</span><span><i class="legend-dot pending"></i>คอมค้างรับ</span></div>
     </div>
-    <div class="dashboard-charts">
-      <div class="dash-chart">
-        <div class="dash-chart-head">
-          <div>
-            <h2><span class="title-icon"><svg class="icon"><use href="#i-chart"></use></svg></span>กราฟแท่งเปรียบเทียบรายเดือน</h2>
-            <p class="sub" style="margin:6px 0 0">เปรียบเทียบคอมพร้อมจ่ายและคอมค้างรับในแต่ละเดือน</p>
-          </div>
-          <span class="period">6 เดือนล่าสุด</span>
+    <div class="dash-chart" id="dashRecap" style="margin-bottom:18px">
+      <div class="dash-chart-head">
+        <div>
+          <h2 id="dashRecapTitle"><span class="title-icon"><svg class="icon"><use href="#i-history"></use></svg></span>ข้อมูลล่าสุด</h2>
+          <p class="sub" style="margin:6px 0 0">สรุปจากเดือนที่บันทึกไว้ล่าสุด</p>
         </div>
-        <div class="month-bars" id="dashMonthBars">
-          <div class="month-bar"><div class="bar-stack" style="--h:0%;--p:0%"></div><b>—</b></div>
-        </div>
-        <div class="chart-legend"><span><i class="legend-dot"></i>คอมพร้อมจ่าย</span><span><i class="legend-dot pending"></i>คอมค้างรับ</span></div>
+        <span class="period" id="dashRecapTag">เดือนล่าสุด</span>
       </div>
-      <div class="dash-chart">
-        <div class="dash-chart-head">
-          <div>
-            <h2><span class="title-icon"><svg class="icon"><use href="#i-panel"></use></svg></span>กราฟย่อยสินค้าที่ได้รับค่าคอม</h2>
-            <p class="sub" style="margin:6px 0 0">ดูสัดส่วนค่าคอมตามหมวดสินค้า</p>
-          </div>
-        </div>
-        <div class="product-bars" id="dashProducts">
-          <div class="product-row"><b>—</b><div class="product-track"><i style="--w:0%"></i></div><span>ยังไม่มีข้อมูล</span></div>
-        </div>
+      <div class="recap-grid" id="dashRecapBody">
+        <div class="recap-tile"><span>ยังไม่มีข้อมูล</span><b>—</b></div>
       </div>
     </div>
     <div class="card" id="uploadCard">
@@ -1529,56 +1500,33 @@ function renderDashboard(){
   const hist=getHist();
   const set=(id,html)=>{ const el=$('#'+id); if(el) el.innerHTML=html; };
   const txt=(id,t)=>{ const el=$('#'+id); if(el) el.textContent=t; };
-  if(!hist.length){                                 // ไม่มีประวัติ → กลับเป็นสถานะ "ยังไม่มีข้อมูล"
-    txt('dashLatestMonth','เดือนล่าสุด'); txt('dashLatestTag','ยังไม่มีข้อมูล'); txt('dashDonut','—');
-    set('dashMini',`<div class="mini-stat"><b>คอมพร้อมจ่าย</b><span>อัปไฟล์แล้วบันทึกเพื่อดูยอดจริง</span></div><div class="mini-stat"><b>คอมค้างรับ</b><span>รายการรอลูกค้าชำระ</span></div>`);
-    set('dashHealth',`<div class="progress-line"><div class="progress-track"><i style="width:0%"></i></div><strong>—</strong></div><div class="status-pill-row"><span class="status-pill">ยังไม่มีข้อมูล</span></div><p class="sub" style="margin:14px 0 0">สถานะนี้จะชัดขึ้นหลังอัปโหลดไฟล์และบันทึกประวัติรายเดือน</p>`);
+  if(!hist.length){                                 // ไม่มีประวัติ → สถานะ "ยังไม่มีข้อมูล"
     set('dashMonthBars',`<div class="month-bar"><div class="bar-stack" style="--h:0%;--p:0%"></div><b>—</b></div>`);
-    set('dashProducts',`<div class="product-row"><b>—</b><div class="product-track"><i style="--w:0%"></i></div><span>ยังไม่มีข้อมูล</span></div>`);
+    txt('dashRecapTitle','ข้อมูลล่าสุด'); txt('dashRecapTag','ยังไม่มีข้อมูล');
+    set('dashRecapBody',`<div class="recap-tile"><span>ยังไม่มีข้อมูล — อัปไฟล์แล้วกดบันทึกสัก 1 เดือน</span><b>—</b></div>`);
     return;
   }
-  const last=hist[hist.length-1];
-  const paid=+last.paidComm||0, pend=+last.pendingComm||0, tot=paid+pend;
-  const paidPct=tot>0?Math.round(paid/tot*100):0;
 
-  // เดือนล่าสุด (โดนัท + ยอดจริง)
-  txt('dashLatestMonth', last.month||'เดือนล่าสุด');
-  txt('dashLatestTag', 'ล่าสุด');
-  txt('dashDonut', paidPct+'%');
-  set('dashMini',
-    `<div class="mini-stat"><b>คอมพร้อมจ่าย</b><span style="color:#15803d;font-weight:700;font-size:14px">${fmt(paid)} ฿</span></div>
-     <div class="mini-stat"><b>คอมค้างรับ</b><span style="color:#c2410c;font-weight:700;font-size:14px">${fmt(pend)} ฿</span></div>`);
-
-  // spark: คอมรวม 7 เดือนล่าสุด
-  const spark=hist.slice(-7);
-  const sMax=Math.max(1,...spark.map(h=>(+h.paidComm||0)+(+h.pendingComm||0)));
-  set('dashSpark', spark.map(h=>{ const v=((+h.paidComm||0)+(+h.pendingComm||0))/sMax*100; return `<i style="height:${Math.max(6,Math.round(v))}%"></i>`; }).join(''));
-
-  // Commission Health: % คอมที่เก็บได้แล้ว 3 เดือนล่าสุด + ป้ายสถานะ
-  const h3=hist.slice(-3);
-  const healthBars=h3.map(h=>{ const t=(+h.paidComm||0)+(+h.pendingComm||0); const p=t>0?Math.round((+h.paidComm||0)/t*100):0;
-    return `<div class="progress-line"><span class="sub" style="width:38px;flex-shrink:0;font-size:12px">${esc(shortMonth(h.month))}</span><div class="progress-track"><i style="width:${p}%"></i></div><strong>${p}%</strong></div>`; }).join('');
-  const need=(+last.mismatchCount||0)+(+last.reviewCount||0);
-  const pendCount=(last.pendingItems||[]).length;
-  const pills=`<div class="status-pill-row">`
-    +(need>0?`<span class="status-pill" style="background:#fef3c7;color:#92400e">ต้องเช็ค ${need} รายการ</span>`:`<span class="status-pill ready">ผ่านการตรวจ</span>`)
-    +(pendCount>0?`<span class="status-pill" style="background:#ffedd5;color:#9a3412">คอมค้าง ${pendCount} รายการ</span>`:``)
-    +`<span class="status-pill">อัปเดต ${esc(shortMonth(last.month))}</span></div>`;
-  set('dashHealth', healthBars+pills+`<p class="sub" style="margin:14px 0 0">แถบ = % คอมที่<b>พร้อมจ่ายแล้ว</b>ของแต่ละเดือน (เทียบกับคอมรวมเดือนนั้น)</p>`);
-
-  // กราฟแท่ง 6 เดือนล่าสุด (เหลือง=ค้าง ซ้อนบนน้ำเงิน=พร้อมจ่าย)
+  // ----- กราฟแท่ง 6 เดือนล่าสุด: ป้ายยอด "คอมค้างรับ" บนหัวแท่ง -----
   const bars=hist.slice(-6);
   const bMax=Math.max(1,...bars.map(h=>(+h.paidComm||0)+(+h.pendingComm||0)));
-  set('dashMonthBars', bars.map(h=>{ const t=(+h.paidComm||0)+(+h.pendingComm||0); const hpct=Math.round(t/bMax*100); const ppct=Math.round((+h.pendingComm||0)/bMax*100);
-    return `<div class="month-bar"><div class="bar-stack" style="--h:${Math.max(8,hpct)}%;--p:${ppct}%"></div><b>${esc(shortMonth(h.month))}</b></div>`; }).join(''));
+  set('dashMonthBars', bars.map(h=>{
+    const paid=+h.paidComm||0, pend=+h.pendingComm||0, t=paid+pend;
+    const hpct=Math.round(t/bMax*100), ppct=Math.round(pend/bMax*100);
+    const label=pend>0 ? `<span class="bar-val">฿${fmt(pend)}</span>` : `<span class="bar-val zero">ครบ</span>`;
+    return `<div class="month-bar">${label}<div class="bar-stack" style="--h:${Math.max(8,hpct)}%;--p:${ppct}%" title="พร้อมจ่าย ${fmt(paid)} · ค้าง ${fmt(pend)} ฿"></div><b>${esc(shortMonth(h.month))}</b></div>`;
+  }).join(''));
 
-  // กราฟย่อยสินค้า: หมวดของเดือนล่าสุด (สูงสุด 5 หมวด)
-  const bd=last.breakdown||{};
-  const ents=Object.entries(bd).filter(e=>(+e[1])>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  if(ents.length){
-    const pMax=Math.max(...ents.map(e=>+e[1]));
-    set('dashProducts', ents.map(e=>{ const w=Math.round(e[1]/pMax*100); return `<div class="product-row"><b>${esc(e[0])}</b><div class="product-track"><i style="--w:${Math.max(6,w)}%"></i></div><span>${fmt(e[1])} ฿</span></div>`; }).join(''));
-  }
+  // ----- การ์ดสรุปเดือนล่าสุด (ด้านล่าง) -----
+  const last=hist[hist.length-1];
+  const lpaid=+last.paidComm||0, lpend=+last.pendingComm||0, lnet=+last.net||0, lsales=+last.totalSales||0;
+  txt('dashRecapTitle', 'ข้อมูลล่าสุด — '+(last.month||''));
+  txt('dashRecapTag', shortMonth(last.month));
+  set('dashRecapBody',
+    `<div class="recap-tile"><span>คอมพร้อมจ่าย</span><b style="color:#15803d">${fmt(lpaid)} ฿</b></div>
+     <div class="recap-tile"><span>คอมค้างรับ</span><b style="color:#c2410c">${fmt(lpend)} ฿</b></div>
+     <div class="recap-tile"><span>เงินเดือนสุทธิ</span><b>${fmt(lnet)} ฿</b></div>
+     <div class="recap-tile"><span>ยอดขายรวม</span><b>${fmt(lsales)} ฿</b></div>`);
 }
 
 let histBarChart=null, histPieChart=null, selRecId=null;
