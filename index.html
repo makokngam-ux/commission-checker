@@ -477,7 +477,7 @@ tr.wh-hl td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
   <section id="tab-check">
     <div class="summary-cards">
       <div class="sum-card got">
-        <div class="sc-top"><div class="sc-icon"><svg class="icon"><use href="#i-money"></use></svg></div><span class="sc-label">เงินที่ได้รับแล้ว <small>(เงินเดือน+คอมที่จ่ายแล้ว)</small></span></div>
+        <div class="sc-top"><div class="sc-icon"><svg class="icon"><use href="#i-money"></use></svg></div><span class="sc-label">เงินที่ได้รับแล้วปีนี้ <small>(เงินเดือน+คอมที่จ่ายแล้ว)</small></span></div>
         <b class="sc-amount" id="sumGot">— ฿</b>
         <span class="sc-sub" id="sumGotSub">เงินเดือนสุทธิรวมทุกเดือน</span>
       </div>
@@ -1334,6 +1334,17 @@ function commitWatch(model, month){
   (model.trackedPending||[]).forEach(p=>{ if(!keys.has(p.key)){ next.push({...p, sinceMonth:month||''}); keys.add(p.key); } });
   setWatch(next);
 }
+// reconcile อัตโนมัติ: กวาดทุกเดือนในประวัติ → ตัดรายการค้างที่ "จ่ายแล้ว" (อยู่ใน paidKeys ของเดือนไหนก็ได้) ออก
+// ทำให้ค้างข้ามเดือนอัปเดตเองโดยไม่ขึ้นกับลำดับการบันทึก/ไม่ต้องบันทึกซ้ำหลังแก้โค้ด คืน true ถ้ามีการเปลี่ยน
+function reconcileWatchFromHistory(){
+  const paid=new Set();
+  getHist().forEach(h=>(h.paidKeys||[]).forEach(k=>paid.add(k)));
+  if(!paid.size) return false;                       // ข้อมูลเก่ายังไม่มี paidKeys → ข้าม (รอ re-save)
+  const watch=getWatch();
+  const pruned=watch.filter(w=>!paid.has(w.key));
+  if(pruned.length!==watch.length){ setWatch(pruned); return true; }
+  return false;
+}
 
 /* ===================================================================
    FILE HANDLING
@@ -1523,14 +1534,17 @@ function saveCheck(model){
       const d=docDateInfo(r.date);
       return {invoiceNo:r.invoiceNo, customer:r.customer, code:r.code, qty:r.qty, sales:+r.sales||0, docDate:d?d.iso:'', docYear:d?d.year:null, docMonth:d?d.monthIndex:null};
     }),
+    // เก็บคีย์ของรายการที่ "จ่ายแล้ว" ในเดือนนี้ — ใช้ reconcile ค้างข้ามเดือนอัตโนมัติ (ไม่ขึ้นกับลำดับบันทึก)
+    paidKeys:model.rows.filter(r=>r.fileComm!=null && r.type!=='out').map(r=>wkey(r.invoiceNo,r.customer,r.code)),
   };
   // 1) บันทึกในเครื่อง (ใช้ทำกราฟย้อนหลัง) — upsert ตาม เดือน+ชื่อ: มีเดือนเดิม=เขียนทับ ไม่เพิ่มซ้ำ
   const hist=getHist();
   const idx=month ? hist.findIndex(h=>h.month===month && (h.name||name)===name) : -1;
   if(idx>=0){ rec.id=hist[idx].id; hist[idx]=rec; } else { hist.push(rec); }
   setHist(hist);
-  // 2) อัปเดตรายการติดตามค้างข้ามเดือน
+  // 2) อัปเดตรายการติดตามค้างข้ามเดือน + reconcile ทุกเดือน (ตัดที่จ่ายแล้วออก ไม่ขึ้นกับลำดับ)
   commitWatch(model, month);
+  reconcileWatchFromHistory();
   pushState();                                    // ซิงก์ขึ้น Sheet
   renderDashboard();                              // อัปเดตแดชบอร์ดหน้าแรกด้วยเลขจริง
   toast('บันทึกผลตรวจแล้ว — ดูได้ที่แท็บประวัติย้อนหลัง');
@@ -1559,13 +1573,17 @@ function renderDashboard(){
   // ----- การ์ดสรุป 3 ใบ: ได้รับแล้ว · คอมค้างจ่ายรวม · รวมทั้งหมด -----
   const watch=getWatch();
   const totalPending=watch.reduce((s,w)=>s+(+w.expected||0),0);            // ค้างจริง (จากตัวติดตามข้ามเดือน)
-  const totalGot=hist.reduce((s,h)=>s+(+h.net||0),0);                      // ได้รับแล้ว = เงินเดือนสุทธิรวมทุกเดือน (รวมคอมที่จ่ายแล้ว)
+  // ได้รับแล้ว = เงินเดือนสุทธิ "เฉพาะปีล่าสุด" (ตามปีในชื่อเดือนที่บันทึก เช่น 2569) — ตัดปีเก่า (2568) ออก
+  const yrOf=h=>+(String(h.month||'').trim().split(/\s+/)[1]||0);
+  const latestYr=hist.length?Math.max(...hist.map(yrOf)):0;
+  const gotRecs=hist.filter(h=>yrOf(h)===latestYr);
+  const totalGot=gotRecs.reduce((s,h)=>s+(+h.net||0),0);
   const months=Array.from(new Set(watch.map(w=>w.sinceMonth).filter(Boolean)));
   const banner=$('#pendingBanner');
 
-  // 1) ได้รับแล้ว
+  // 1) ได้รับแล้ว (เฉพาะปีนี้)
   txt('sumGot', (hist.length?fmt(totalGot):'—')+' ฿');
-  txt('sumGotSub', hist.length? ('เงินเดือนสุทธิรวม '+hist.length+' เดือน (รวมคอมที่จ่ายแล้ว)') : 'ยังไม่มีข้อมูล');
+  txt('sumGotSub', hist.length? ('เงินเดือนสุทธิปี '+latestYr+' · '+gotRecs.length+' เดือน (รวมคอมที่จ่ายแล้ว)') : 'ยังไม่มีข้อมูล');
 
   // 2) คอมค้างจ่ายรวม
   txt('pbAmount', (hist.length?fmt(totalPending):'—')+' ฿');
@@ -1743,7 +1761,16 @@ $('#historyBody').addEventListener('click',e=>{
     if(a>=0&&b>=0&&b<h.length){ const t=h[a]; h[a]=h[b]; h[b]=t; setHist(h); pushState(); loadHistory(); renderDashboard(); } return; }
   const delBtn=e.target.closest('[data-delhist]');
   const id=delBtn&&delBtn.dataset.delhist;
-  if(id){ if(!armAction(delBtn,'ยืนยันลบ')) return; setHist(getHist().filter(x=>x.id!==id)); pushState(); loadHistory(); renderDashboard(); return; }
+  if(id){ if(!armAction(delBtn,'ยืนยันลบ')) return;
+    const rec=getHist().find(x=>x.id===id);                 // เก็บ month+name ไว้ลบใน Sheet ด้วย
+    setHist(getHist().filter(x=>x.id!==id)); pushState(); loadHistory(); renderDashboard();
+    const cfg=getCfg();                                     // ลบแถวใน Summary/Detail sheet ตรงด้วย (ถ้าตั้ง URL)
+    if(cfg.url && rec && rec.month){
+      fetch(cfg.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({action:'delete', month:rec.month, name:rec.name||DEFAULT_NAME})})
+        .then(r=>r.json()).then(res=>{ if(res.ok) toast('ลบออกจาก Google Sheet แล้ว'); }).catch(()=>{});
+    } else { toast('ลบเดือนแล้ว'); }
+    return; }
   // ล้างการไฮไลต์
   if(e.target.closest('[data-whclear]')){ selRecId=null; loadHistory(); return; }
   // คลิกแถวเดือน → โชว์รายการค้างของเดือนนั้น (คลิกซ้ำ = ปิด)
@@ -1914,10 +1941,13 @@ document.addEventListener('click', e=>{ const t=e.target.closest('.card-toggle')
 
 initSettings();
 loadEditor();
+if(reconcileWatchFromHistory()) pushState();       // เคลียร์รายการค้างที่จ่ายแล้วอัตโนมัติ (ไม่ต้องบันทึกซ้ำ)
 renderDashboard();                                // โชว์เลขจริงบนหน้าแรกตั้งแต่เปิดแอป
 
 /* ===== เปิดแอป: ดึงข้อมูลล่าสุดจาก Google Sheet (ซิงก์ข้ามเครื่อง) ===== */
-pullState(ok=>{ if(ok){ loadEditor(); renderDashboard();
+pullState(ok=>{ if(ok){ loadEditor();
+  if(reconcileWatchFromHistory()) pushState();      // reconcile หลังดึงข้อมูลจาก Sheet
+  renderDashboard();
   if(!$('#tab-history').classList.contains('hide')) loadHistory();
   toast('ซิงก์ข้อมูลจาก Google Sheet แล้ว'); } });
 
