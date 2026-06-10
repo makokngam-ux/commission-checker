@@ -708,6 +708,7 @@ function tierRate(tiers, ppw){ for(const t of (tiers||[])){ if(ppw >= t.min) ret
 function computeRow(it){
   const code = norm(it.code);
   const qty = +it.qty||0, sales=+it.sales||0, wpp=+it.wattPerPanel||0;
+  const totW = wpp>0 ? qty*wpp : (+it.totalWatt||0);   // วัตต์รวม: คิดจากวัตต์/แผง หรือจากคอลัมน์ "ขาย/watt" ในไฟล์
   const P = pickPeriod(it.date);   // เลือกชุดอัตราตามวันที่ใบสำคัญ
   const r = {type:'?', label:it.code, expected:0, method:'', status:'ok', note:'', period:P.name};
 
@@ -741,23 +742,23 @@ function computeRow(it){
   // 4) Solar Panel PPM
   if(code.startsWith('SPPM')||code.includes('PPM')){
     r.type='panel-ppm'; r.label='แผง PPM';
-    return panelCalc(r, qty, sales, wpp, P.ppmTiers);
+    return panelCalc(r, totW, sales, P.ppmTiers);
   }
   // 5) Solar Panel Leapton
   if(code.startsWith('LP')){
     r.type='panel-leapton'; r.label='แผง Leapton';
-    return panelCalc(r, qty, sales, wpp, P.leaptonTiers);
+    return panelCalc(r, totW, sales, P.leaptonTiers);
   }
   // 5.1) Solar Panel LONGi (LR7/LR9 — Hi-MO)
   if(code.startsWith('LR')){
     r.type='panel-longi'; r.label='แผง LONGi';
-    return panelCalc(r, qty, sales, wpp, P.longiTiers);
+    return panelCalc(r, totW, sales, P.longiTiers);
   }
   // 6) แผงเล็ก <130W — ขาย >เกณฑ์ ก็ยังได้เรตปกติ (0.20) นับเป็นค้างรับ/จ่ายได้ ไม่ตัดทิ้งเป็น "ต้องเช็ค"
   if(code.startsWith('STP6')||code.startsWith('HD-36')||code.startsWith('HD36')||(wpp>0&&wpp<=160)){
     r.type='panel-small'; r.label='แผงเล็ก <130W';
     const sp = P.smallPanel||{threshold:14,rate:0.20};
-    const totalW = qty*wpp; const ppw = totalW? sales/totalW : 0;
+    const totalW = totW; const ppw = totalW? sales/totalW : 0;
     r.expected = totalW*sp.rate;
     r.method = `${fmt(totalW)}W × ${sp.rate}` + (totalW&&ppw>=sp.threshold?` · ขาย ${ppw.toFixed(1)}฿/W (>เกณฑ์)`:'');
     return r;
@@ -771,9 +772,9 @@ function computeRow(it){
   r.method='อุปกรณ์เสริม/นอกตาราง'; r.note='ไม่ได้คอม'; return r;
 }
 
-function panelCalc(r, qty, sales, wpp, tiers){
-  const totalW = qty*wpp; const ppw = totalW? sales/totalW : 0;
-  if(!totalW){ r.status='review'; r.note='ไม่มีค่าวัตต์/แผง — กรอกคอลัมน์ Watt ไม่ครบ'; r.method='คำนวณไม่ได้'; return r; }
+function panelCalc(r, totalW, sales, tiers){
+  const ppw = totalW? sales/totalW : 0;
+  if(!totalW){ r.status='review'; r.note='ไม่มีค่าวัตต์ (วัตต์/แผง หรือ ขาย/watt) — ตรวจไฟล์'; r.method='คำนวณไม่ได้'; return r; }
   const rate = tierRate(tiers, ppw);
   r.expected = totalW*rate;
   r.method = `${fmt(totalW)}W × ${rate} (ขาย ${ppw.toFixed(2)}฿/W)`;
@@ -787,7 +788,33 @@ function panelCalc(r, qty, sales, wpp, tiers){
                       M12 รหัสสินค้า · P15 จำนวน · Q16 ยอดขาย
                       R17 วัตต์รวม · S18 ราคา/W · T19 เรต · U20 ค่าคอม
    =================================================================== */
-const COL = {paid:0, watt:5, date:8, invoice:9, custCode:10, cust:11, code:12, qty:15, sales:16, totalW:17, rate:19, comm:20};
+const DEFAULT_COL = {paid:0, watt:5, date:8, invoice:9, custCode:10, cust:11, code:12, qty:15, sales:16, totalW:17, rate:19, comm:20};
+let COL = DEFAULT_COL;
+// อ่านหัวตารางหาตำแหน่งคอลัมน์เอง (รองรับไฟล์ทุก layout — บาง layout คอลัมน์เลื่อน)
+function detectCols(rows){
+  for(let i=0;i<Math.min(rows.length,8);i++){
+    const row=(rows[i]||[]).map(c=>typeof c==='string'?c.trim():'');
+    if(row.some(c=>/รหัสสินค้า/.test(c)) && row.some(c=>/ยอดขาย/.test(c))){
+      const c={};
+      row.forEach((h,idx)=>{ if(!h) return;
+        if(/รหัสสินค้า/.test(h)) c.code=idx;
+        else if(/ปริมาณ|จำนวน/.test(h)) c.qty=idx;
+        else if(/ยอดขาย/.test(h)) c.sales=idx;
+        else if(/เลข(ที่)?ใบสำคัญ/.test(h)) c.invoice=idx;
+        else if(/ชื่อลูก(หนี้|ค้า)/.test(h)) c.cust=idx;
+        else if(/รหัสลูก(หนี้|ค้า)/.test(h)) c.custCode=idx;
+        else if(/วันที่ใบสำคัญ/.test(h)) c.date=idx;
+        else if(/อัตรา/.test(h)) c.rate=idx;
+        else if(/ขาย\s*\/\s*watt/i.test(h)) c.totalW=idx;
+        else if(/^watt$|^วัตต์$/i.test(h)) c.watt=idx;
+        else if(/^ค่าคอม/.test(h)) c.comm=idx;
+        else if(/^ชำระ$/.test(h)) c.paid=idx;
+      });
+      if(c.code!=null && c.sales!=null && c.qty!=null && c.comm!=null) return c;
+    }
+  }
+  return null;
+}
 const SAL_KEYS = [
   {k:'เงินเดือน', t:'income', n:'เงินเดือนประจำ'},
   {k:'โทรศัพท์',  t:'income', n:'ค่าโทรศัพท์'},
@@ -812,6 +839,7 @@ const numAt = (row,i)=>{ const v=row[i]; return typeof v==='number'?v:(typeof v=
 const lastNum = row => { for(let i=row.length-1;i>=0;i--){ if(typeof row[i]==='number') return row[i]; } return null; };
 
 function parseWorkbook(rows){
+  COL = detectCols(rows) || DEFAULT_COL;   // หาตำแหน่งคอลัมน์จากหัวตารางก่อน
   const items=[]; const salary={income:{}, deduct:{}}; const summaryRows=[];
   let lastCust='', lastInvoice=''; // สำหรับดึงชื่อบริษัท/ใบสำคัญลงมาต่อเมื่อแถวเว้นว่าง
   for(let i=0;i<rows.length;i++){
@@ -832,6 +860,7 @@ function parseWorkbook(rows){
         code: code.trim(),
         qty, sales,
         wattPerPanel: numAt(row,COL.watt)||0,
+        totalWatt: numAt(row,COL.totalW)||0,   // วัตต์รวม (ขาย/watt) — ใช้ตอนไม่มีวัตต์/แผง
         date: excelDate(row[COL.date]),
         paid: norm(row[COL.paid])==='OK',
         fileComm, pendingText,
