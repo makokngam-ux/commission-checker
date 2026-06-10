@@ -717,10 +717,13 @@ function computeRow(it){
     r.type='out'; r.status='out'; r.expected=0;
     r.method='นอกตาราง'; r.note='ไม่ได้คอม'; return r;
   }
-  // 2) Optimizer
+  // 2) Optimizer — รหัสที่มี "1GM4MBV" = variant ของ S1400 เสมอ (บางไฟล์เขียน prefix เป็น S1200 ผิด)
+  const force1400 = code.includes('1GM4MBV');
   for(const o of (P.optimizers||[])){
-    if(splitKeys(o.keys).some(k=>code.startsWith(k))){
-      r.type='optimizer'; r.label='Optimizer '+o.label;
+    const keys=splitKeys(o.keys);
+    const matched = force1400 ? keys.some(k=>k.includes('S1400')) : keys.some(k=>code.startsWith(k));
+    if(matched){
+      r.type='optimizer'; r.label='Optimizer '+o.label+(force1400?' (1GM4MBV)':'');
       const ppu = qty? sales/qty : 0;
       const useP1 = !(o.price1>0) || ppu>=o.price1;
       r.expected = qty*(useP1?o.comP1:o.comP2);
@@ -832,7 +835,14 @@ const SAL_KEYS = [
 function excelDate(v){
   if(v instanceof Date) return v;
   if(typeof v==='number'){ const o=XLSX.SSF.parse_date_code(v); if(o) return new Date(o.y,o.m-1,o.d); }
-  if(typeof v==='string'){ const d=new Date(v); if(!isNaN(d)) return d; }
+  if(typeof v==='string'){
+    const s=v.trim();
+    // รูปแบบไทย วัน/เดือน/ปี (DD/MM/YYYY หรือ DD-MM-YYYY) — JS new Date() อ่านเป็น MM/DD ผิด
+    const m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+    if(m){ let d=+m[1], mo=+m[2], y=+m[3]; if(y<100) y+=2000; if(y>2500) y-=543; // ปี พ.ศ. → ค.ศ.
+      if(d>=1&&d<=31&&mo>=1&&mo<=12) return new Date(y, mo-1, d); }
+    const dd=new Date(s); if(!isNaN(dd)) return dd;
+  }
   return null;
 }
 const numAt = (row,i)=>{ const v=row[i]; return typeof v==='number'?v:(typeof v==='string'&&v.trim()&&!isNaN(v.replace(/,/g,''))?+v.replace(/,/g,''):null); };
