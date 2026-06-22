@@ -108,12 +108,43 @@ header{padding:30px 0 22px;display:flex;align-items:flex-start;justify-content:s
 .dash-chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
 .dash-chart h2{font-size:17px;display:flex;align-items:center;gap:8px}
 .dash-chart .period{font-family:'Prompt';font-size:12px;color:var(--brand2);background:var(--blue-soft);border-radius:999px;padding:6px 10px;white-space:nowrap}
-.month-bars{height:230px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;align-items:end;border-bottom:1px solid var(--line);padding-top:14px}
+.month-bars{height:230px;display:flex;gap:14px;align-items:end;border-bottom:1px solid var(--line);padding-top:14px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+.month-bar{flex:1 0 56px;min-width:56px}
 .month-bar{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
 .bar-stack{width:100%;max-width:46px;height:var(--h);min-height:34px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,#7ccaff,var(--brand));position:relative;box-shadow:0 10px 18px rgba(47,158,232,.14)}
 .bar-stack:after{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--p);background:linear-gradient(180deg,#ffe27b,var(--yellow));border-radius:0 0 0 0}
 .month-bar b{font-family:'Prompt';font-size:12px;color:var(--muted)}
-.bar-net{font-family:'Kanit';font-size:10px;font-weight:600;color:#15803d;opacity:.82;white-space:nowrap;line-height:1.1;margin-top:-2px}
+.bar-paid{font-family:'Kanit';font-size:10px;font-weight:700;color:var(--brand2);white-space:nowrap;line-height:1.1}
+.bar-net{font-family:'Kanit';font-size:9.5px;font-weight:600;color:#15803d;opacity:.82;white-space:nowrap;line-height:1.1;margin-top:-1px}
+.bar-cleared{font-family:'Kanit';font-size:9px;font-weight:700;color:#15803d;background:#e9fbef;border:1px solid #bbf2cd;border-radius:999px;padding:0 6px;white-space:nowrap;line-height:1.55}
+.mbar-click{cursor:pointer}
+.mbar-click:hover .bar-stack{filter:brightness(1.06)}
+/* ป็อปอัพติดตามการเก็บเงิน (A+B) */
+.mc-sec{margin-bottom:15px}
+.mc-h{font-family:'Kanit';font-size:13.5px;font-weight:600;margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.mc-h.mc-out{color:var(--brand2)}
+.mc-grp{margin:0 0 11px}
+.mc-grp-h{font-family:'Kanit';font-size:12.5px;color:#475569;margin:7px 0 5px}
+.mc-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:8px 11px;background:var(--slate-bg);border-radius:8px;margin-bottom:5px;font-size:13px;line-height:1.45}
+.mc-info b{font-family:'Kanit'}
+.mc-end{text-align:right;flex-shrink:0;white-space:nowrap}
+.mc-amt{font-family:'Kanit';font-weight:700;display:block}
+.mc-ok{font-size:11px;color:#15803d;font-weight:600}
+.mc-pend{font-size:11px;color:#c2410c;font-weight:600}
+/* แถบสรุปการทำจ่าย */
+.period-sel{font-family:'Kanit';font-size:13px;border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;color:var(--ink);cursor:pointer;max-width:160px}
+.po-total{font-family:'Kanit';font-size:14px;margin-bottom:10px;line-height:1.5}
+.po-bar{display:flex;height:18px;border-radius:999px;overflow:hidden;gap:2px;background:#eef2f7;margin-bottom:12px}
+.po-bar i{display:block;height:100%;min-width:3px}
+.po-list{display:flex;flex-direction:column;gap:5px}
+.po-row{display:flex;align-items:center;gap:9px;padding:8px 11px;background:var(--slate-bg);border-radius:8px;font-size:13.5px}
+.po-row.po-click{cursor:pointer;transition:background .12s}
+.po-row.po-click:hover{background:#eaf3fc}
+.po-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.po-lab{flex:1;min-width:0}
+.po-amt{font-family:'Kanit';font-weight:700;white-space:nowrap}
+.po-pct{font-family:'Kanit';font-size:12px;color:var(--muted);width:38px;text-align:right}
+.po-change{margin-top:12px;padding:10px 13px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;font-size:13px;line-height:1.5}
 .bar-val{font-family:'Prompt';font-size:11px;font-weight:700;color:#c2410c;background:#fff4ec;border:1px solid #ffd9c2;border-radius:999px;padding:1px 7px;white-space:nowrap;line-height:1.6}
 .bar-val.zero{color:#16a34a;background:#e9fbef;border-color:#bbf2cd}
 .recap-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
@@ -443,7 +474,9 @@ tr.wh-hl td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
   .month-bars{height:190px;gap:9px}
   /* element ใหม่บนมือถือ: ป้ายบนกราฟ + การ์ดสรุป + เช็คลิสต์ + ปุ่มหมุด */
   .bar-val{font-size:9.5px;padding:1px 5px}
-  .bar-net{font-size:9px}
+  .bar-net{font-size:8.5px}
+  .bar-paid{font-size:9px}
+  .bar-cleared{font-size:8.5px;padding:0 5px}
   .sc-amount{font-size:22px}
   .sc-label{font-size:12px}
   .sc-label small{font-size:10.5px}
@@ -561,14 +594,24 @@ tr.wh-hl td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
       <div class="dash-chart-head">
         <div>
           <h2><span class="title-icon"><svg class="icon"><use href="#i-chart"></use></svg></span>กราฟแท่งเปรียบเทียบรายเดือน</h2>
-          <p class="sub" style="margin:6px 0 0"><b style="color:#c2410c">คอมค้างรับ</b></p>
+          <p class="sub" style="margin:6px 0 0">บนแท่ง <b style="color:#c2410c">คอมค้างรับ (ปัจจุบัน)</b> · ใต้แท่ง <b style="color:var(--brand2)">คอมที่ได้รับ</b> · แตะแท่งดูรายละเอียด</p>
         </div>
-        <span class="period">6 เดือนล่าสุด</span>
+        <span class="period" id="barPeriod">6 เดือนล่าสุด</span>
       </div>
       <div class="month-bars" id="dashMonthBars">
         <div class="month-bar"><div class="bar-stack" style="--h:0%;--p:0%"></div><b>—</b></div>
       </div>
       <div class="chart-legend"><span><i class="legend-dot"></i>คอมพร้อมจ่าย</span><span><i class="legend-dot pending"></i>คอมค้างรับ</span></div>
+    </div>
+    <div class="dash-chart" id="payoutPanel" style="margin-bottom:18px">
+      <div class="dash-chart-head">
+        <div>
+          <h2><span class="title-icon"><svg class="icon"><use href="#i-money"></use></svg></span>การทำจ่ายคอม — เดือนนี้เอาคอมเดือนไหนมาจ่าย</h2>
+          <p class="sub" style="margin:6px 0 0">เลือกเดือน → ดูว่าจ่ายดึงมาจากเดือนไหนบ้าง + คอมค้างลดลงเท่าไร</p>
+        </div>
+        <select id="payoutMonth" class="period-sel"></select>
+      </div>
+      <div id="payoutBody"></div>
     </div>
     <div class="dash-chart" id="dashRecap" style="margin-bottom:18px">
       <div class="dash-chart-head">
@@ -1007,7 +1050,7 @@ function runCheck(parsed){
   // รายการค้างที่ต้องติดตามข้ามเดือน: ช่องค่าคอมมีหมายเหตุ (ไม่ใช่ "ไม่จ่าย"/"ฟรี")
   const trackedPending = rows
     .filter(r=>r.fileComm==null && r.type!=='out' && r.pendingText && !/ไม่จ่าย|ฟรี/.test(r.pendingText))
-    .map(r=>({key:wkey(r.invoiceNo,r.customer,r.code), invoiceNo:r.invoiceNo, customer:r.customer,
+    .map(r=>({key:wkey(r.invoiceNo,r.customer,r.code,r.qty), invoiceNo:r.invoiceNo, customer:r.customer,
               code:r.code, qty:r.qty, expected:r.expectedRounded, note:r.pendingText, date:thDate(r.date)}));
   // ตรวจรายการซ้ำ (ใบสำคัญ+รหัส+จำนวน+ยอดขาย ตรงกัน = อาจบันทึก/จ่ายซ้ำ)
   const dupMap={};
@@ -1426,8 +1469,8 @@ const LS_HIST='ssc_hist', LS_WATCH='ssc_watch';
 const getHist=()=>{ try{return JSON.parse(localStorage.getItem(LS_HIST))||[]}catch{return[]} };
 const setHist=h=>localStorage.setItem(LS_HIST,JSON.stringify(h));
 const getWatch=()=>{ try{ let w=JSON.parse(localStorage.getItem(LS_WATCH))||[];
-  // migration: คีย์เก่า (2 ส่วน = ใบสำคัญ+ลูกค้า) → ล้าง ให้สร้างใหม่ด้วยคีย์ 3 ส่วน (รวมรหัสสินค้า)
-  if(w.length && w[0] && typeof w[0].key==='string' && w[0].key.split('|').length<3){ w=[]; localStorage.setItem(LS_WATCH,'[]'); }
+  // migration: คีย์รุ่นเก่า (ไม่ขึ้นต้น "V2") → ล้าง ให้สร้างใหม่ด้วยคีย์รุ่นใหม่ (เลขใบ+รหัส+จำนวน) ตอน re-save
+  if(w.length && w[0] && typeof w[0].key==='string' && w[0].key.slice(0,2)!=='V2'){ w=[]; localStorage.setItem(LS_WATCH,'[]'); }
   return w; }catch{return[]} };
 const setWatch=w=>localStorage.setItem(LS_WATCH,JSON.stringify(w));
 // ชื่อลูกค้าเป็นภาษาไทย — ใช้ตัวแปลงที่เก็บอักษรไทยไว้ (norm() ตัดอักษรไทยทิ้ง ใช้กับรหัสสินค้าเท่านั้น)
@@ -1435,12 +1478,17 @@ const normName=s=>String(s==null?'':s).replace(/\s+/g,'').toLowerCase();
 // รหัสสินค้าแบบ canonical สำหรับจับคู่ค้าง→จ่าย: บางเดือนเขียนรหัสไม่เหมือนกัน
 // เช่น ม.ค. เขียน "S1400" แต่ เม.ย. เขียน "S1400-1GM4MBV" (1GM4MBV = รุ่น S1400 เสมอ) → ต้องมองเป็นรหัสเดียวกัน
 const canonCode=code=>{ const n=norm(code); return n.includes('1GM4MBV') ? 'S1400' : n; };
-// คีย์จับคู่: เลขใบสำคัญ + ชื่อลูกค้า + รหัสสินค้า (ใบเดียวกันมีหลายสินค้า ต้องแยกกัน ไม่งั้นเก็บแค่ตัวแรก)
-const wkey=(inv,cust,code)=>norm(inv)+'|'+normName(cust)+'|'+canonCode(code);
+// คีย์จับคู่ค้าง→จ่าย: ใช้ "เลขใบสำคัญ + รหัสสินค้า + จำนวน" เป็นหลัก (เลขใบไม่ซ้ำกันอยู่แล้ว)
+// → ทนชื่อลูกค้าพิมพ์ต่างกันข้ามเดือน (เช่น วันแสง↔วันเนส) ที่เคยทำให้จับคู่ไม่ได้
+// ถ้าเลขใบสำคัญว่าง ค่อย fallback ใช้ชื่อลูกค้า (กันคีย์ชนกันข้ามลูกค้า)
+const wkey=(inv,cust,code,qty)=>{
+  const i=norm(inv), c=canonCode(code), q=(qty==null||qty==='')?'':String(qty);
+  return i ? ('V2|'+i+'|'+c+'|'+q) : ('V2N|'+normName(cust)+'|'+c+'|'+q);
+};
 
 // เทียบรายการค้างที่จำไว้ กับไฟล์เดือนนี้
 function reconcileWatch(model){
-  const stored=getWatch(); const cur={}; model.rows.forEach(r=>{ cur[wkey(r.invoiceNo,r.customer,r.code)]=r; });
+  const stored=getWatch(); const cur={}; model.rows.forEach(r=>{ cur[wkey(r.invoiceNo,r.customer,r.code,r.qty)]=r; });
   const paid=[], still=[], missing=[];
   stored.forEach(w=>{ const c=cur[w.key];
     if(!c) missing.push(w);                       // หายไปจากไฟล์ → ต้องเตือนเสมอ
@@ -1453,7 +1501,7 @@ function reconcileWatch(model){
 }
 // อัปเดตรายการติดตามหลังบันทึก: ลบที่ได้รับแล้ว / เก็บที่ยังค้าง+หาย / เพิ่มที่ค้างใหม่
 function commitWatch(model, month){
-  const stored=getWatch(); const cur={}; model.rows.forEach(r=>{ cur[wkey(r.invoiceNo,r.customer,r.code)]=r; });
+  const stored=getWatch(); const cur={}; model.rows.forEach(r=>{ cur[wkey(r.invoiceNo,r.customer,r.code,r.qty)]=r; });
   let next=stored.filter(w=>{ const c=cur[w.key]; return !(c&&c.fileComm!=null); }); // ตัดที่จ่ายแล้วออก
   const keys=new Set(next.map(w=>w.key));
   (model.trackedPending||[]).forEach(p=>{ if(!keys.has(p.key)){ next.push({...p, sinceMonth:month||''}); keys.add(p.key); } });
@@ -1653,14 +1701,14 @@ function saveCheck(model){
     reviewCount:model.rows.filter(r=>r.status==='review').length,
     // เก็บรายการค้างของเดือนนี้ไว้ (snapshot) — ไว้โชว์ตอนคลิกเดือน
     pendingItems:model.rows.filter(r=>r.status==='pending'&&r.type!=='out')
-      .map(r=>({inv:r.invoiceNo,cust:r.customer,code:r.code,qty:r.qty,exp:r.expectedRounded,key:wkey(r.invoiceNo,r.customer,r.code)})),
+      .map(r=>({inv:r.invoiceNo,cust:r.customer,code:r.code,qty:r.qty,exp:r.expectedRounded,key:wkey(r.invoiceNo,r.customer,r.code,r.qty)})),
     // เก็บยอดขายตามวันที่ใบสำคัญจริง — ใช้คำนวณยอดขายในปี ไม่ผูกกับเดือนที่บันทึกไฟล์
     salesItems:model.rows.filter(r=>r.type!=='out').map(r=>{
       const d=docDateInfo(r.date);
       return {invoiceNo:r.invoiceNo, customer:r.customer, code:r.code, qty:r.qty, sales:+r.sales||0, docDate:d?d.iso:'', docYear:d?d.year:null, docMonth:d?d.monthIndex:null};
     }),
     // เก็บคีย์ของรายการที่ "จ่ายแล้ว" ในเดือนนี้ — ใช้ reconcile ค้างข้ามเดือนอัตโนมัติ (ไม่ขึ้นกับลำดับบันทึก)
-    paidKeys:model.rows.filter(r=>r.fileComm!=null && r.type!=='out').map(r=>wkey(r.invoiceNo,r.customer,r.code)),
+    paidKeys:model.rows.filter(r=>r.fileComm!=null && r.type!=='out').map(r=>wkey(r.invoiceNo,r.customer,r.code,r.qty)),
   };
   // 1) บันทึกในเครื่อง (ใช้ทำกราฟย้อนหลัง) — upsert ตาม เดือน+ชื่อ: มีเดือนเดิม=เขียนทับ ไม่เพิ่มซ้ำ
   const hist=getHist();
@@ -1690,6 +1738,74 @@ function saveCheck(model){
 // ====== แดชบอร์ดหน้าแรก: ดึงเลขจริงจากประวัติเดือนล่าสุด (แทนเลขตัวอย่าง) ======
 const TH_ABBR={'มกราคม':'ม.ค.','กุมภาพันธ์':'ก.พ.','มีนาคม':'มี.ค.','เมษายน':'เม.ย.','พฤษภาคม':'พ.ค.','มิถุนายน':'มิ.ย.','กรกฎาคม':'ก.ค.','สิงหาคม':'ส.ค.','กันยายน':'ก.ย.','ตุลาคม':'ต.ค.','พฤศจิกายน':'พ.ย.','ธันวาคม':'ธ.ค.'};
 function shortMonth(m){ if(!m) return '—'; return enMonth(m, false); }
+
+// ===== ติดตามการเก็บเงินค้างข้ามเดือน (A: เดือนนี้เก็บได้เท่าไร · B: เดือนที่จ่ายดึงจากเดือนไหน) =====
+// อาศัยข้อมูลที่มีอยู่: pendingItems (ใบที่ค้างของแต่ละเดือน) + paidKeys (ใบที่จ่ายในแต่ละเดือน)
+function monthOrd(m){ const p=String(m||'').trim().split(/\s+/); const mi=TH_MONTHS.indexOf(p[0]); return (+(p[1]||0))*12+(mi<0?0:mi); }
+function collectionEvents(){
+  const sorted=getHist().slice().sort((a,b)=>monthOrd(a.month)-monthOrd(b.month));
+  const origin={}, paidAt={};
+  sorted.forEach(h=>{ (h.pendingItems||[]).forEach(p=>{ if(p.key && !(p.key in origin)) origin[p.key]={month:h.month,ord:monthOrd(h.month),item:p}; }); });
+  sorted.forEach(h=>{ (h.paidKeys||[]).forEach(k=>{ if(!(k in paidAt)) paidAt[k]={month:h.month,ord:monthOrd(h.month)}; }); });
+  return Object.keys(origin).map(k=>{ const o=origin[k], pa=paidAt[k]; const paid=(pa&&pa.ord>=o.ord)?pa.month:null;
+    return {key:k, originMonth:o.month, paidInMonth:paid, amount:+o.item.exp||0, item:o.item}; });
+}
+function clearedOf(month, ev){ return ev.filter(e=>e.originMonth===month && e.paidInMonth).reduce((s,e)=>s+e.amount,0); }
+// คอมค้าง "จริงตอนนี้" ของเดือนนั้น (เฉพาะที่เกิดเดือนนี้ + ยังไม่จ่าย) — record เก่าไม่มีรายละเอียด → ใช้ snapshot
+function livePendingOf(h, ev){ if(!(h.pendingItems||[]).length) return +h.pendingComm||0; return ev.filter(e=>e.originMonth===h.month && !e.paidInMonth).reduce((s,e)=>s+e.amount,0); }
+function billRow(it, amt, status){ return `<div class="mc-row"><div class="mc-info"><b>${esc(it.inv||'-')}</b> · ${esc(String(it.cust||'').slice(0,20))}<br><span class="method">${esc(it.code||'')} × ${it.qty!=null?fmt(it.qty):'-'}</span></div><div class="mc-end"><span class="mc-amt">${fmt(amt)} ฿</span>${status||''}</div></div>`; }
+function openMonthCollection(month){
+  const ev=collectionEvents();
+  const mine=ev.filter(e=>e.originMonth===month);
+  const paidByThis=ev.filter(e=>e.paidInMonth===month);
+  const cleared=mine.filter(e=>e.paidInMonth).reduce((s,e)=>s+e.amount,0);
+  const stillP=mine.filter(e=>!e.paidInMonth).reduce((s,e)=>s+e.amount,0);
+  let html='';
+  if(paidByThis.length){
+    const totB=paidByThis.reduce((s,e)=>s+e.amount,0);
+    const byO={}; paidByThis.forEach(e=>{ (byO[e.originMonth]=byO[e.originMonth]||[]).push(e); });
+    html+=`<div class="mc-sec"><div class="mc-h mc-out">📤 เดือนนี้จ่ายคอม <b>${fmt(totB)} ฿</b> — ดึงมาจาก</div>`;
+    Object.keys(byO).sort((a,b)=>monthOrd(a)-monthOrd(b)).forEach(om=>{ const list=byO[om]; const sum=list.reduce((s,e)=>s+e.amount,0);
+      html+=`<div class="mc-grp"><div class="mc-grp-h">ค้างจาก <b>${esc(enMonth(om,true))}</b> · ${fmt(sum)} ฿</div>`+list.map(e=>billRow(e.item,e.amount,'')).join('')+`</div>`; });
+    html+=`</div>`;
+  }
+  if(mine.length){
+    html+=`<div class="mc-sec"><div class="mc-h">📥 รายการค้างที่เกิดเดือนนี้ — ✓ เก็บแล้ว <b style="color:#15803d">${fmt(cleared)}</b> · ⏳ เหลือ <b style="color:#c2410c">${fmt(stillP)}</b> ฿</div>`
+      +mine.sort((a,b)=>(a.paidInMonth?1:0)-(b.paidInMonth?1:0)).map(e=>billRow(e.item,e.amount,e.paidInMonth?`<span class="mc-ok">✓ จ่าย ${esc(enMonth(e.paidInMonth,false))}</span>`:`<span class="mc-pend">⏳ ยังค้าง</span>`)).join('')+`</div>`;
+  }
+  if(!html) html=`<div class="sub" style="padding:10px 0">เดือนนี้ไม่มีรายการค้าง / การเก็บเงิน</div>`;
+  $('#rowModalTitle').textContent='ติดตามคอม — เดือน '+enMonth(month,true);
+  $('#rowModalBody').innerHTML=html;
+  $('#rowModal').classList.remove('hide');
+}
+document.addEventListener('click', e=>{ const b=e.target.closest('[data-mcol]'); if(b) openMonthCollection(b.dataset.mcol); });
+
+// ===== แถบสรุปการทำจ่าย: เดือนนี้เอาคอมเดือนไหนมาจ่ายบ้าง + คอมค้างลดลงเท่าไร =====
+const PAYOUT_COLORS=['#2f9ee8','#7c3aed','#16a34a','#ea580c','#0d9488','#d97706','#dc2626','#64748b'];
+function renderPayout(month){
+  const body=$('#payoutBody'), sel=$('#payoutMonth'); if(!body) return;
+  const hist=getHist();
+  if(!hist.length){ if(sel) sel.innerHTML=''; body.innerHTML='<div class="sub" style="padding:8px 0">ยังไม่มีข้อมูล — อัปไฟล์แล้วกดบันทึก</div>'; return; }
+  const sorted=hist.slice().sort((a,b)=>monthOrd(a.month)-monthOrd(b.month));
+  const cur=month||sorted[sorted.length-1].month;
+  if(sel){ sel.innerHTML=sorted.slice().reverse().map(h=>`<option value="${esc(h.month)}" ${h.month===cur?'selected':''}>${esc(enMonth(h.month,true))}</option>`).join(''); sel.onchange=()=>renderPayout(sel.value); }
+  const rec=hist.find(h=>h.month===cur); const paidComm=+(rec&&rec.paidComm)||0;
+  const ev=collectionEvents();
+  const carry=ev.filter(e=>e.paidInMonth===cur); const carrySum=carry.reduce((s,e)=>s+e.amount,0);
+  const newPortion=Math.max(0, paidComm-carrySum);
+  const byO={}; carry.forEach(e=>{ byO[e.originMonth]=(byO[e.originMonth]||0)+e.amount; });
+  let segs=Object.keys(byO).sort((a,b)=>monthOrd(a)-monthOrd(b)).map(om=>({label:enMonth(om,true), origin:om, amt:byO[om]}));
+  if(newPortion>0) segs.push({label:'ขายใหม่ '+enMonth(cur,false), origin:null, amt:newPortion});
+  const total=paidComm||1;
+  const barHtml=`<div class="po-bar">`+segs.map((s,i)=>`<i style="width:${Math.max(2,Math.round(s.amt/total*100))}%;background:${PAYOUT_COLORS[i%PAYOUT_COLORS.length]}" title="${esc(s.label)} ${fmt(s.amt)} ฿"></i>`).join('')+`</div>`;
+  const listHtml=segs.map((s,i)=>`<div class="po-row${s.origin?' po-click':''}" ${s.origin?`data-mcol="${esc(s.origin)}"`:''}><span class="po-dot" style="background:${PAYOUT_COLORS[i%PAYOUT_COLORS.length]}"></span><span class="po-lab">${s.origin?'ค้างจาก ':''}<b>${esc(s.label)}</b></span><span class="po-amt">${fmt(s.amt)} ฿</span><span class="po-pct">${Math.round(s.amt/total*100)}%</span></div>`).join('');
+  const watchTotal=getWatch().reduce((s,w)=>s+(+w.expected||0),0);
+  body.innerHTML=`<div class="po-total">จ่ายเดือนนี้รวม <b>${fmt(paidComm)} ฿</b>${carrySum>0?` · เก็บค้างเก่า <b style="color:#15803d">${fmt(carrySum)}</b>`:''}${newPortion>0?` · ขายใหม่ ${fmt(newPortion)}`:''}</div>`
+    +(segs.length?barHtml+`<div class="po-list">${listHtml}</div>`:'<div class="sub" style="padding:6px 0">เดือนนี้ยังไม่มีการทำจ่าย</div>')
+    +(carrySum>0?`<div class="po-change">📉 ลดคอมค้าง <b style="color:#15803d">−${fmt(carrySum)} ฿</b> จากการเก็บเดือนนี้ · คอมค้างที่เหลือตอนนี้ <b style="color:#c2410c">${fmt(watchTotal)} ฿</b></div>`:'')
+    +(segs.some(s=>s.origin)?`<div class="sub" style="margin-top:8px;font-size:11.5px">💡 แตะแถว "ค้างจาก…" เพื่อดูรายบิล</div>`:'');
+}
+
 function renderDashboard(){
   const hist=getHist();
   const set=(id,html)=>{ const el=$('#'+id); if(el) el.innerHTML=html; };
@@ -1762,15 +1878,19 @@ function renderDashboard(){
     return;
   }
 
-  // ----- กราฟแท่ง 6 เดือนล่าสุด: ป้ายยอด "คอมค้างรับ" บนหัวแท่ง -----
-  const bars=hist.slice(-6);
-  const bMax=Math.max(1,...bars.map(h=>(+h.paidComm||0)+(+h.pendingComm||0)));
+  // ----- กราฟแท่ง: โชว์ทุกเดือน (เรียงเวลา) · ยอดค้าง = "ค้างจริงตอนนี้" (ลดเมื่อเก็บได้) -----
+  const colEv=collectionEvents();
+  const livePend=h=>livePendingOf(h, colEv);
+  const bars=hist.slice().sort((a,b)=>monthOrd(a.month)-monthOrd(b.month)).slice(-24);
+  const bMax=Math.max(1,...bars.map(h=>(+h.paidComm||0)+livePend(h)));
+  { const bp=$('#barPeriod'); if(bp) bp.textContent='ทั้งหมด '+bars.length+' เดือน'; }
   set('dashMonthBars', bars.map(h=>{
-    const paid=+h.paidComm||0, pend=+h.pendingComm||0, t=paid+pend, net=+h.net||0;
-    const hpct=Math.round(t/bMax*70), ppct=Math.round(pend/bMax*70);   // *70 = เว้นที่ให้ป้ายบน/ล่าง
-    const label=pend>0 ? `<span class="bar-val">฿${fmt(pend)}</span>` : `<span class="bar-val zero">ครบ</span>`;
-    return `<div class="month-bar">${label}<div class="bar-stack" style="--h:${Math.max(8,hpct)}%;--p:${ppct}%" title="พร้อมจ่าย ${fmt(paid)} · ค้าง ${fmt(pend)} · เงินเดือน ${fmt(net)} ฿"></div><b>${esc(shortMonth(h.month))}</b><span class="bar-net">${fmt(net)}฿</span></div>`;
+    const paid=+h.paidComm||0, pend=livePend(h), t=paid+pend, orig=+h.pendingComm||0;
+    const hpct=Math.round(t/bMax*64), ppct=Math.round(pend/bMax*64);
+    const label=pend>0 ? `<span class="bar-val">฿${fmt(pend)}</span>` : `<span class="bar-val zero">เก็บครบ</span>`;
+    return `<div class="month-bar mbar-click" data-mcol="${esc(h.month)}" title="ค้างจริงตอนนี้ ${fmt(pend)} ฿ (เดิม ${fmt(orig)}) · แตะดูรายละเอียด">${label}<div class="bar-stack" style="--h:${Math.max(8,hpct)}%;--p:${ppct}%"></div><b>${esc(shortMonth(h.month))}</b><span class="bar-paid">คอม ฿${fmt(paid)}</span></div>`;
   }).join(''));
+  renderPayout();   // แถบสรุปการทำจ่าย (เดือนล่าสุด)
 
   // ----- การ์ดสรุปเดือนล่าสุด (ด้านล่าง) -----
   const last=hist[hist.length-1];
@@ -1874,10 +1994,11 @@ function loadHistory(){
     });
     ctx.restore();
   }};
+  const cev=collectionEvents();
   histBarChart=new Chart($('#histBar'),{type:'bar',
     data:{labels, datasets:[
       {label:'คอมพร้อมจ่าย', data:hist.map(x=>+x.paidComm||0), backgroundColor:'#0ea5e9', borderRadius:6},
-      {label:'คอมค้าง', data:hist.map(x=>+x.pendingComm||0), backgroundColor:'#f59e0b', borderRadius:6},
+      {label:'คอมค้าง (ปัจจุบัน)', data:hist.map(x=>livePendingOf(x, cev)), backgroundColor:'#f59e0b', borderRadius:6},
       {label:'เงินเดือนสุทธิ', data:hist.map(x=>+x.net||0), backgroundColor:'#16a34a', borderRadius:6},
     ]},
     options:{responsive:true, layout:{padding:{top:18}},

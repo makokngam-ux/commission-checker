@@ -1,5 +1,5 @@
 /* Service Worker — ตรวจค่าคอม SSC (ทำให้ใช้งานออฟไลน์ + ติดตั้งเป็นแอปได้) */
-const CACHE = 'ssc-comm-v35';
+const CACHE = 'ssc-comm-v41';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './logo.png', './icon-192.png', './icon-512.png', './apple-touch-icon.png',
