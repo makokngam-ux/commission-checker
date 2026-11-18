@@ -675,7 +675,13 @@ header{padding:25px 0 17px;align-items:center}
   .data-status{font-size:11px;gap:6px}
   .data-status #dataDocStatus{display:none}
   .meta-grid{grid-template-columns:1fr!important}
-  .meta-grid input,.meta-grid select{width:100%;min-width:0}
+  .meta-grid .field{min-width:0;margin-bottom:0}
+  .meta-grid input,.meta-grid select{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+  /* ชื่อชุดเต็มแถว · วันที่เริ่ม-สิ้นสุดอยู่คู่กัน (iPhone: ช่องวันที่ต้องปิด appearance ไม่งั้นกว้างล้นช่อง) */
+  .meta-grid.period-meta{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:12px 10px}
+  .meta-grid.period-meta .field:first-child{grid-column:1/-1}
+  .meta-grid input[type=date]{-webkit-appearance:none;appearance:none;display:block;height:46px;line-height:22px;padding:11px 10px;text-align:left;font-size:14px}
+  .meta-grid input[type=date]::-webkit-date-and-time-value{text-align:left}
   /* ตารางประวัติรายเดือน → การ์ด เห็นครบทุกตัวเลขไม่ต้องเลื่อนข้าง */
   .tbl-wrap.hist-wrap{border:0;overflow:visible}
   table.hist-table,table.hist-table tbody{display:block;width:100%;min-width:0}
@@ -887,10 +893,10 @@ header{padding:25px 0 17px;align-items:center}
           <label><svg class="icon icon-sm" style="vertical-align:-3px;color:var(--brand2)"><use href="#i-clock"></use></svg> ชุดอัตราที่ใช้อยู่ (ช่วงเวลา/ไตรมาส)</label>
           <select id="periodSel"></select>
         </div>
-        <div class="meta-grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:12px">
+        <div class="meta-grid period-meta" style="grid-template-columns:1fr 1fr 1fr;margin-top:12px">
           <div class="field"><label>ชื่อชุด</label><input id="pName" placeholder="เช่น ไตรมาส 3/2569"></div>
           <div class="field"><label>มีผลตั้งแต่</label><input id="pFrom" type="date"></div>
-          <div class="field"><label>ถึงวันที่ (ว่าง = ปัจจุบัน)</label><input id="pTo" type="date"></div>
+          <div class="field"><label>ถึงวันที่ <small style="font-weight:400;color:var(--muted)">(ว่าง = ปัจจุบัน)</small></label><input id="pTo" type="date"></div>
         </div>
         <div class="btn-row" style="margin:12px 0 0">
           <button class="btn btn-ghost btn-sm" id="addPeriod"><svg class="icon icon-sm"><use href="#i-plus"></use></svg>เพิ่มช่วง/ไตรมาส</button>

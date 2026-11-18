@@ -1,5 +1,5 @@
 /* Service Worker — ตรวจค่าคอม SSC (ทำให้ใช้งานออฟไลน์ + ติดตั้งเป็นแอปได้) */
-const CACHE = 'ssc-comm-v45';
+const CACHE = 'ssc-comm-v46';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './logo.png', './icon-192.png', './icon-512.png', './apple-touch-icon.png',
@@ -21,13 +21,31 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;                 // POST ไป Google Sheet → ผ่านเน็ตตรง
   if (e.request.url.includes('script.google.com')) return; // อย่า cache ข้อมูล Sheet (ต้องสด)
+  const url = new URL(e.request.url);
+  const isPage = e.request.mode === 'navigate' ||
+    (url.origin === location.origin && /(\/|index\.html|sw\.js|manifest\.json)$/.test(url.pathname));
+  if (isPage) {
+    // ตัวแอป: ลองเน็ตก่อน → ได้รุ่นล่าสุดทันทีที่เปิด · ไม่มีเน็ต/ช้าเกิน 4 วิ ค่อยใช้ของที่เก็บไว้
+    e.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      try {
+        const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 4000);
+        const resp = await fetch(e.request, { cache: 'no-cache', signal: ctl.signal }); clearTimeout(timer);
+        if (resp && resp.ok) cache.put(e.request, resp.clone()).catch(() => {});
+        return resp;
+      } catch (err) {
+        return (await cache.match(e.request)) || (await cache.match('./index.html')) || Response.error();
+      }
+    })());
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then(cached =>
       cached || fetch(e.request).then(resp => {
         const copy = resp.clone();
         caches.open(CACHE).then(c => c.put(e.request, copy).catch(() => {}));
         return resp;
-      }).catch(() => caches.match('./index.html'))
+      })
     )
   );
 });
