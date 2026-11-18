@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>ตรวจค่าคอม SSC</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0ea5e9">
+<meta name="theme-color" content="#174a85">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,7 +19,7 @@
 <style>
 :root{
   --bg:#f6f9fd; --panel:#ffffff; --panel-soft:#f2f7fc; --ink:#162033; --muted:#6e7b91;
-  --line:#e5edf6; --brand:#2f9ee8; --brand2:#1779c6; --blue-soft:#e8f5ff;
+  --line:#e5edf6; --brand:#1f66b3; --brand2:#174a85; --blue-soft:#eaf1fa;
   --yellow:#ffc20e; --yellow2:#ffab19; --orange:#ff6b22; --green:#18a968; --green-bg:#e8f8ef;
   --red:#df3b35; --red-bg:#fff0ef; --amber:#d98b00; --amber-bg:#fff7dd; --slate-bg:#f4f7fb;
   --shadow:0 14px 35px rgba(43,74,116,.08),0 2px 8px rgba(43,74,116,.05);
@@ -56,7 +56,7 @@ header{padding:30px 0 22px;display:flex;align-items:flex-start;justify-content:s
 .side{position:fixed;left:max(20px,calc((100vw - 1480px)/2 + 20px));top:20px;width:250px;min-height:calc(100vh - 40px);background:linear-gradient(180deg,#fff 0,#fbfdff 100%);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:8px;padding:24px 18px;display:flex;flex-direction:column;gap:18px;z-index:5;overflow:hidden}
 .side:before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--yellow),var(--brand),var(--orange))}
 .side-logo{display:flex;align-items:center;justify-content:center;gap:12px}
-.side-logo .mark{width:128px;height:128px;border:2px solid #bfe1fa;border-radius:22px;display:grid;place-items:center;color:var(--brand);background:#fff;overflow:hidden;box-shadow:0 18px 36px rgba(47,158,232,.14)}
+.side-logo .mark{width:128px;height:128px;border:2px solid #bfe1fa;border-radius:22px;display:grid;place-items:center;color:var(--brand);background:#fff;overflow:hidden;box-shadow:0 18px 36px rgba(31,102,179,.14)}
 .side-logo .mark img{width:100%;height:100%;object-fit:contain;display:block}
 /* Tabs */
 .tabs{display:flex;flex-direction:column;gap:6px;margin-top:6px}
@@ -67,11 +67,11 @@ header{padding:30px 0 22px;display:flex;align-items:flex-start;justify-content:s
 /* dashboard welcome */
 .hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);gap:18px;margin-bottom:18px}
 .hero-panel{background:linear-gradient(135deg,#fff 0,#f4fbff 57%,#fff9e8 100%);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:8px;padding:24px;position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.05fr) 310px;gap:22px;align-items:center}
-.hero-panel:before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(47,158,232,.08),transparent 42%),repeating-linear-gradient(90deg,rgba(23,121,198,.04) 0 1px,transparent 1px 28px);pointer-events:none}
+.hero-panel:before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(31,102,179,.08),transparent 42%),repeating-linear-gradient(90deg,rgba(23,121,198,.04) 0 1px,transparent 1px 28px);pointer-events:none}
 .hero-panel h2{font-size:28px;margin-bottom:8px;position:relative;z-index:1}
 .hero-panel p{color:var(--muted);font-size:14px;line-height:1.65;max-width:640px;position:relative;z-index:1}
 .hero-copy{position:relative;z-index:1}
-.hero-label{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(47,158,232,.22);background:#fff;color:var(--brand2);font-family:'Prompt';font-size:12px;border-radius:999px;padding:7px 12px;margin-bottom:14px;box-shadow:0 8px 20px rgba(47,158,232,.08)}
+.hero-label{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(31,102,179,.22);background:#fff;color:var(--brand2);font-family:'Prompt';font-size:12px;border-radius:999px;padding:7px 12px;margin-bottom:14px;box-shadow:0 8px 20px rgba(31,102,179,.08)}
 .hero-visual{position:relative;z-index:1;background:rgba(255,255,255,.84);border:1px solid rgba(229,237,246,.9);border-radius:8px;padding:16px;box-shadow:0 18px 40px rgba(43,74,116,.1)}
 .visual-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;font-family:'Prompt';font-size:13px}
 .visual-head span{color:var(--muted);font-family:'Kanit';font-size:12px}
@@ -84,7 +84,7 @@ header{padding:30px 0 22px;display:flex;align-items:flex-start;justify-content:s
 .mini-stat b{font-family:'Prompt';font-size:17px}
 .mini-stat span{display:block;color:var(--muted);font-size:11.5px}
 .spark-bars{display:flex;align-items:end;gap:7px;height:58px;margin-top:14px;padding-top:8px;border-top:1px solid var(--line)}
-.spark-bars i{display:block;flex:1;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#7ccaff,var(--brand));min-width:9px}
+.spark-bars i{display:block;flex:1;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#5c9fe0,var(--brand));min-width:9px}
 .spark-bars i:nth-child(2n){background:linear-gradient(180deg,#ffe27b,var(--yellow))}
 .spark-bars i:nth-child(3n){background:linear-gradient(180deg,#ffa56e,var(--orange))}
 .hero-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:18px;position:relative;z-index:1}
@@ -118,7 +118,7 @@ header{padding:30px 0 22px;display:flex;align-items:flex-start;justify-content:s
 .month-bars{height:230px;display:flex;gap:14px;align-items:end;border-bottom:1px solid var(--line);padding-top:14px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
 .month-bar{flex:1 0 56px;min-width:56px}
 .month-bar{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
-.bar-stack{width:100%;max-width:46px;height:var(--h);min-height:34px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,#7ccaff,var(--brand));position:relative;box-shadow:0 10px 18px rgba(47,158,232,.14)}
+.bar-stack{width:100%;max-width:46px;height:var(--h);min-height:34px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,#5c9fe0,var(--brand));position:relative;box-shadow:0 10px 18px rgba(31,102,179,.14)}
 .bar-stack:after{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--p);background:linear-gradient(180deg,#ffe27b,var(--yellow));border-radius:0 0 0 0}
 .month-bar b{font-family:'Prompt';font-size:12px;color:var(--muted)}
 .bar-paid{font-family:'Kanit';font-size:10px;font-weight:700;color:var(--brand2);white-space:nowrap;line-height:1.1}
@@ -179,7 +179,7 @@ header{padding:30px 0 22px;display:flex;align-items:flex-start;justify-content:s
 .sum-card{border-radius:8px;padding:18px 20px;color:#fff;display:flex;flex-direction:column;gap:6px;box-shadow:0 12px 26px rgba(43,74,116,.16)}
 .sum-card.got{background:linear-gradient(125deg,#34d399,#10b981 60%,#059669)}
 .sum-card.pend{background:linear-gradient(125deg,#fb923c,#ea580c 60%,#c2410c)}
-.sum-card.pend.clear{background:linear-gradient(125deg,#38bdf8,#0ea5e9 60%,#0284c7)}
+.sum-card.pend.clear{background:linear-gradient(125deg,#4a8fd6,#1f66b3 60%,#174a85)}
 .sum-card.total{background:linear-gradient(125deg,#5b8def,#2f6fed 58%,#1e54c7)}
 .sum-card.sales-ytd{background:linear-gradient(125deg,#14b8a6,#0f8f86 58%,#0f766e)}
 .sum-card.sales-ytd{cursor:pointer;transition:transform .15s,box-shadow .15s}
@@ -221,8 +221,8 @@ header{padding:30px 0 22px;display:flex;align-items:flex-start;justify-content:s
 .settings-pins{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .pin-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-family:'Prompt';font-size:13.5px;cursor:pointer;box-shadow:0 2px 8px rgba(43,74,116,.06);transition:all .15s ease;white-space:nowrap}
 .pin-btn .icon{width:16px;height:16px;color:var(--brand2)}
-.pin-btn:hover{border-color:var(--brand);box-shadow:0 6px 16px rgba(47,158,232,.14);transform:translateY(-1px)}
-.pin-btn.active{background:linear-gradient(135deg,var(--brand),#6dc5ff);border-color:transparent;color:#fff;box-shadow:0 8px 18px rgba(47,158,232,.28)}
+.pin-btn:hover{border-color:var(--brand);box-shadow:0 6px 16px rgba(31,102,179,.14);transform:translateY(-1px)}
+.pin-btn.active{background:linear-gradient(135deg,var(--brand),#6dc5ff);border-color:transparent;color:#fff;box-shadow:0 8px 18px rgba(31,102,179,.28)}
 .pin-btn.active .icon{color:#fff}
 .pin-panel{animation:pinIn .18s ease}
 @keyframes pinIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
@@ -348,7 +348,7 @@ tr.s-review{background:#fffbeb}
 @keyframes popin{from{transform:scale(.96);opacity:.6}to{transform:none;opacity:1}}
 .p-ok{background:var(--green-bg);color:#15803d}
 .p-bad{background:var(--red-bg);color:var(--red)}
-.p-pend{background:#e0f2fe;color:#0369a1}
+.p-pend{background:#e3ecf8;color:#174a85}
 .p-rev{background:var(--amber-bg);color:var(--amber)}
 .p-out{background:#f1f5f9;color:#64748b}
 .method{color:var(--muted);font-size:12px}
@@ -370,7 +370,7 @@ tr.s-review{background:#fffbeb}
 .sal-row input{width:115px;text-align:right;border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-family:'Kanit';font-size:14px;font-variant-numeric:tabular-nums;background:#fff}
 .sal-row input:focus{outline:none;border-color:var(--brand)}
 .sal-row.total{font-family:'Prompt';font-weight:600;border-bottom:0;border-top:2px solid var(--ink);margin-top:4px;padding-top:11px}
-.net-box{margin-top:16px;background:linear-gradient(135deg,#2f9ee8,#126fb6);color:#fff;border-radius:8px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center}
+.net-box{margin-top:16px;background:linear-gradient(135deg,#1f66b3,#126fb6);color:#fff;border-radius:8px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center}
 .net-box .l{font-family:'Prompt';font-size:15px}
 .net-box .l .icon{vertical-align:-3px;margin-right:6px}
 .net-box .v{font-family:'Prompt';font-size:28px;font-weight:700}
@@ -425,7 +425,7 @@ tr.s-review{background:#fffbeb}
 .rate-sec h3 .sec-ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;background:var(--blue-soft);color:var(--brand2)}
 .rate-sec h3 .sec-ic .icon{width:16px;height:16px}
 .rate-sec h3 .method{font-weight:400;font-size:11.5px;color:var(--muted);flex-basis:100%;margin-left:40px;line-height:1.45}
-.sec-inv .sec-ic{background:#e0f2fe;color:#0284c7}
+.sec-inv .sec-ic{background:#e3ecf8;color:#174a85}
 .sec-opt .sec-ic{background:#ede9fe;color:#7c3aed}
 .sec-ppm .sec-ic{background:#dcfce7;color:#16a34a}
 .sec-leap .sec-ic{background:#ccfbf1;color:#0d9488}
@@ -443,8 +443,8 @@ tr.s-review{background:#fffbeb}
 .edit-tbl input.n{text-align:right;font-variant-numeric:tabular-nums}
 #rateCard input.n{font-variant-numeric:tabular-nums}
 .xrow{border:0;background:var(--red-bg);color:var(--red);border-radius:7px;min-width:28px;height:28px;padding:0 8px;cursor:pointer;font-weight:700;font-size:13px;flex-shrink:0}
-.erow{border:0;background:#e0f2fe;color:var(--brand2);border-radius:7px;min-width:28px;height:28px;padding:0 7px;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
-.erow:hover{background:#bae6fd}
+.erow{border:0;background:#e3ecf8;color:var(--brand2);border-radius:7px;min-width:28px;height:28px;padding:0 7px;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+.erow:hover{background:#cfdff2}
 .erow .icon{width:15px;height:15px}
 .confirming{background:var(--red)!important;color:#fff!important;border-color:var(--red)!important}
 .addrow{margin-top:10px;border-style:dashed!important;border-color:var(--brand)!important;color:var(--brand2)!important}
@@ -514,7 +514,7 @@ tr.wh-hl td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
 .wh-clear{margin-left:auto;border:0;background:#9a3412;color:#fff;border-radius:6px;padding:4px 11px;font-size:12px;cursor:pointer;font-family:'Prompt';white-space:nowrap}
 .ord{display:flex;flex-direction:column;gap:2px;align-items:center}
 .ord-btn{border:0;background:var(--slate-bg);color:var(--brand2);cursor:pointer;width:24px;height:16px;line-height:1;border-radius:4px;font-size:10px;padding:0;display:flex;align-items:center;justify-content:center}
-.ord-btn:hover{background:#bae6fd}
+.ord-btn:hover{background:#cfdff2}
 .ord-btn.dis{background:transparent;color:#d0d7e2;cursor:default}
 .badge-count{background:var(--red);color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;margin-left:4px;font-family:'Prompt'}
 .spin{width:16px;height:16px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;display:inline-block;animation:sp .7s linear infinite}
@@ -572,24 +572,24 @@ tr.wh-hl td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
 /* ===== Professional visual polish ===== */
 :root{
   --bg:#f3f6fa;--panel-soft:#f7f9fc;--ink:#172033;--muted:#68758a;--line:#dfe7f1;
-  --brand:#1687ce;--brand2:#0d6da9;--blue-soft:#eaf5fc;
+  --brand:#1f66b3;--brand2:#174a85;--blue-soft:#eaf1fa;
   --shadow:0 8px 24px rgba(26,50,82,.07),0 1px 3px rgba(26,50,82,.04);
 }
 body{background:#f3f6fa}
 .wrap{max-width:1440px;padding-left:286px}
 header{padding:25px 0 17px;align-items:center}
-.logo{background:#eaf5fc;border-color:#cfe7f6;color:var(--brand2);box-shadow:none}
+.logo{background:#eaf1fa;border-color:#cfdff2;color:var(--brand2);box-shadow:none}
 .brand h1{font-size:23px;letter-spacing:0}
 .brand-en{color:#738096;font-weight:400}
-.top-upload{background:var(--brand2);color:#fff;border-color:var(--brand2);box-shadow:0 6px 15px rgba(13,109,169,.18)}
-.top-upload:hover{background:#0b6096;border-color:#0b6096;color:#fff}
+.top-upload{background:var(--brand2);color:#fff;border-color:var(--brand2);box-shadow:0 6px 15px rgba(23,74,133,.18)}
+.top-upload:hover{background:#123b6b;border-color:#123b6b;color:#fff}
 .side{width:236px;left:max(20px,calc((100vw - 1440px)/2 + 20px));padding:20px 15px;background:#fff;border-color:#dce5ef;box-shadow:0 10px 30px rgba(26,50,82,.07)}
 .side:before{height:3px;background:var(--brand)}
 .side-logo .mark{width:104px;height:104px;border-radius:16px;border:1px solid #d7e8f5;box-shadow:none}
 .tabs{gap:4px;margin-top:4px}
 .tab{font-size:13.5px;color:#445166;padding:12px 13px;position:relative}
 .tab:hover{background:#f4f8fb;color:var(--brand2)}
-.tab.active{background:#eaf5fc;color:#0d6da9;box-shadow:none}
+.tab.active{background:#eaf1fa;color:#174a85;box-shadow:none}
 .tab.active:before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:4px;background:var(--brand)}
 .data-status{margin:0 0 16px;background:#fff;border-color:#e1e8f0;box-shadow:none;color:#69768a}
 .summary-cards{gap:12px}
@@ -597,7 +597,7 @@ header{padding:25px 0 17px;align-items:center}
 .sum-card:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}
 .sum-card.got{--accent:#159a66;--soft:#eaf8f1}
 .sum-card.pend{--accent:#dd6b20;--soft:#fff3e8}
-.sum-card.pend.clear{--accent:#1687ce;--soft:#eaf5fc}
+.sum-card.pend.clear{--accent:#1f66b3;--soft:#eaf1fa}
 .sum-card.sales-ytd{--accent:#14867c;--soft:#e9f8f6}
 .sum-card.total{--accent:#4f6fc7;--soft:#eef1fb}
 .sum-card.sales-ytd:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(20,134,124,.13)}
@@ -613,11 +613,11 @@ header{padding:25px 0 17px;align-items:center}
 .dash-chart{padding:19px}
 .dash-chart-head{margin-bottom:15px}
 .dash-chart .period{background:#f1f6fa;border:1px solid #dbe7f0;color:#52677a}
-.title-icon{background:#eaf5fc;color:#0d6da9}
+.title-icon{background:#eaf1fa;color:#174a85}
 .recap-tile{background:#f7f9fc;border-color:#e1e8f0}
-.btn-primary{background:var(--brand2)!important;color:#fff!important;box-shadow:0 6px 15px rgba(13,109,169,.16)!important}
-.btn-primary:hover{background:#0b6096!important}
-.pin-btn.active{background:var(--brand2);box-shadow:0 6px 15px rgba(13,109,169,.17)}
+.btn-primary{background:var(--brand2)!important;color:#fff!important;box-shadow:0 6px 15px rgba(23,74,133,.16)!important}
+.btn-primary:hover{background:#123b6b!important}
+.pin-btn.active{background:var(--brand2);box-shadow:0 6px 15px rgba(23,74,133,.17)}
 .chip.active{background:var(--brand2);border-color:var(--brand2)}
 @media(max-width:720px){
   body{background:#f3f6fa}
@@ -627,7 +627,7 @@ header{padding:25px 0 17px;align-items:center}
   .tabs{margin:0;gap:4px}
   .tab{padding:8px 5px;flex-direction:column;gap:3px;font-size:11px;border-radius:8px}
   .tab.active:before{display:none}
-  .tab.active{background:#eaf5fc;color:var(--brand2)}
+  .tab.active{background:#eaf1fa;color:var(--brand2)}
   header{padding:17px 48px 14px 0}
   .data-status{margin:0 0 12px;padding:7px 9px}
   .sum-card{padding:15px 16px}
@@ -639,6 +639,62 @@ header{padding:25px 0 17px;align-items:center}
   .side:before,.side>div:first-child{display:none}
   .tabs{flex-direction:row;flex-wrap:wrap;margin:0}
   .tab{padding:10px 13px}
+}
+
+/* ===== v45: โทนกรมท่า-ทอง + ปรับหน้าจอมือถือ ===== */
+:root{--gold:#f2b01e;--gold-soft:#fff6dc}
+.logo{background:linear-gradient(140deg,#1f66b3,#123b6b)!important;border-color:#123b6b!important;color:#ffd35a!important}
+.side:before{background:linear-gradient(90deg,var(--brand2),var(--gold))}
+.tab.active:before{background:var(--gold)}
+.top-upload{background:var(--brand2)}
+.data-status{align-items:center}
+.data-status .ds-backup{margin-left:auto;border:1px solid #d5e0ee;background:#fff;color:var(--brand2);border-radius:999px;padding:4px 11px;font-family:'Prompt';font-size:11.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.data-status .ds-backup:hover{background:var(--blue-soft)}
+.data-status.warn{background:var(--gold-soft);border-color:#f3d37a;color:#7a5200}
+.data-status.warn #dataSyncStatus{font-weight:600}
+.data-status.warn .status-dot{background:#e08a00}
+.chart-flex>div:first-child{max-width:230px;width:100%;margin:0 auto}
+.hist-bar-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+.hist-bar-inner{position:relative;height:280px;min-width:100%}
+@media(max-width:720px){
+  .tab.active{color:var(--brand2);box-shadow:inset 0 -3px 0 var(--gold)}
+}
+@media(max-width:560px){
+  .summary-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .sum-card{padding:12px 12px 11px;gap:3px}
+  .sum-card:before{width:3px}
+  .sc-top{gap:7px;align-items:flex-start}
+  .sc-icon{width:26px;height:26px;border-radius:7px}
+  .sc-icon .icon{width:15px;height:15px}
+  .sc-label{font-size:11.5px;line-height:1.25}
+  .sc-label small{display:none}
+  .sc-amount{font-size:18.5px;white-space:nowrap;margin-top:4px}
+  .sc-vat{font-size:10.5px;margin:1px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sc-sub{font-size:10.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .sales-year-select{max-width:58px;padding:2px 4px;font-size:10.5px}
+  .data-status{font-size:11px;gap:6px}
+  .data-status #dataDocStatus{display:none}
+  .meta-grid{grid-template-columns:1fr!important}
+  .meta-grid input,.meta-grid select{width:100%;min-width:0}
+  /* ตารางประวัติรายเดือน → การ์ด เห็นครบทุกตัวเลขไม่ต้องเลื่อนข้าง */
+  .tbl-wrap.hist-wrap{border:0;overflow:visible}
+  table.hist-table,table.hist-table tbody{display:block;width:100%;min-width:0}
+  table.hist-table thead{display:none}
+  table.hist-table tr{display:grid;grid-template-columns:30px 1fr 1fr 34px;grid-template-areas:"ord month month del" "ord date flag flag" "sales sales paid paid" "pend pend net net";gap:6px 10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:9px;background:#fff}
+  table.hist-table tr.rec-sel{border-color:var(--brand);box-shadow:0 0 0 2px var(--blue-soft)}
+  table.hist-table td{display:block;padding:0!important;border:0!important;background:transparent!important;text-align:left!important;min-width:0}
+  table.hist-table td.h-ord{grid-area:ord}
+  table.hist-table td.h-month{grid-area:month;font-family:'Prompt';font-size:15px}
+  table.hist-table td.h-date{grid-area:date}
+  table.hist-table td.h-flag{grid-area:flag;justify-self:end}
+  table.hist-table td.h-del{grid-area:del;justify-self:end}
+  table.hist-table td.h-sales{grid-area:sales}
+  table.hist-table td.h-paid{grid-area:paid}
+  table.hist-table td.h-pend{grid-area:pend}
+  table.hist-table td.h-net{grid-area:net}
+  table.hist-table td[data-l]{background:var(--panel-soft)!important;border-radius:8px;padding:7px 9px!important;font-family:'Prompt';font-size:14px;font-weight:600}
+  table.hist-table td[data-l]:before{content:attr(data-l);display:block;font-family:'Kanit';font-size:10.5px;font-weight:400;color:var(--muted);margin-bottom:1px}
+  table.hist-table td.h-date:before{content:'บันทึก ';color:var(--muted);font-size:11px}
 }
 </style>
 </head>
@@ -707,6 +763,7 @@ header{padding:25px 0 17px;align-items:center}
     <span><i class="status-dot local" id="dataStatusDot"></i><b id="dataSourceStatus">ข้อมูลในเครื่อง</b></span>
     <span id="dataSyncStatus">ยังไม่เคยซิงก์</span>
     <span id="dataDocStatus">0 เอกสาร</span>
+    <button type="button" class="ds-backup" id="quickBackup" title="ดาวน์โหลดไฟล์สำรองข้อมูลทั้งหมด"><svg class="icon icon-sm"><use href="#i-save"></use></svg>สำรอง</button>
   </div>
 
   <!-- ============ TAB: CHECK ============ -->
@@ -1566,7 +1623,7 @@ function showConfirm(title, bodyHtml, onOk, okDisabled){
 function closeConfirm(){ $('#confirmModal').classList.add('hide'); }
 $('#confirmModal').addEventListener('click', e=>{ if(e.target.closest('[data-cclose]')) closeConfirm(); });
 
-const CHART_COLORS=['#0ea5e9','#16a34a','#7c3aed','#f59e0b','#ec4899','#14b8a6','#f97316','#64748b'];
+const CHART_COLORS=['#1f66b3','#16a34a','#7c3aed','#f59e0b','#ec4899','#14b8a6','#f97316','#64748b'];
 function drawChart(inc, ded, commTotal){
   const income={...inc}; if(commTotal>0) income['ค่าคอมมิชชั่น']=commTotal;
   const entries=Object.entries(income).filter(([,v])=>v>0);
@@ -1847,6 +1904,7 @@ function updateDataStatus(){
   const src=$('#dataSourceStatus'), time=$('#dataSyncStatus'), docs=$('#dataDocStatus'), dot=$('#dataStatusDot');
   if(src) src.textContent=cfg.url?'Google Sheet + ในเครื่อง':'ข้อมูลในเครื่อง';
   if(dot) dot.classList.toggle('local',!cfg.url);
+  const bar=document.querySelector('.data-status'); if(bar) bar.classList.toggle('warn',!!(cfg.url&&isDirty()));
   if(time) time.textContent=(cfg.url&&isDirty())?'⚠️ มีข้อมูลที่ยังไม่ได้ส่งขึ้น Sheet (อยู่ในเครื่องนี้ครบ)':sync.at?'ซิงก์ล่าสุด '+new Date(sync.at).toLocaleString('th-TH',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'ยังไม่เคยซิงก์';
   const keys=new Set(); hist.forEach(h=>(h.salesItems||[]).forEach(it=>keys.add(norm(it.invoiceNo||'')||[it.docDate,it.code,it.sales].join('|'))));
   if(docs) docs.textContent=keys.size+' เอกสาร';
@@ -2097,7 +2155,7 @@ function openMonthCollection(month){
 document.addEventListener('click', e=>{ const b=e.target.closest('[data-mcol]'); if(b) openMonthCollection(b.dataset.mcol); });
 
 // ===== แถบสรุปการทำจ่าย: เดือนนี้เอาคอมเดือนไหนมาจ่ายบ้าง + คอมค้างลดลงเท่าไร =====
-const PAYOUT_COLORS=['#2f9ee8','#7c3aed','#16a34a','#ea580c','#0d9488','#d97706','#dc2626','#64748b'];
+const PAYOUT_COLORS=['#1f66b3','#7c3aed','#16a34a','#ea580c','#0d9488','#d97706','#dc2626','#64748b'];
 function renderPayout(month){
   const body=$('#payoutBody'), sel=$('#payoutMonth'); if(!body) return;
   const hist=getHist();
@@ -2275,14 +2333,14 @@ function loadHistory(){
   const labels=hist.map(x=>x.month?enMonth(x.month,false):thDate(new Date(x.savedAt)));
   let h=`<div class="card" style="box-shadow:none;border:0;padding:0;margin:0">
     <h3 style="font-family:'Prompt';font-size:15px;margin-bottom:8px">${iconSm('chart')} เปรียบเทียบรายเดือน</h3>
-    <canvas id="histBar" height="130"></canvas>
+    <div class="hist-bar-wrap"><div class="hist-bar-inner" style="min-width:${Math.max(hist.length*66,300)}px"><canvas id="histBar"></canvas></div></div>
     <h3 style="font-family:'Prompt';font-size:15px;margin:20px 0 4px">${iconSm('pie')} สัดส่วนคอมตามสินค้า (เลือกเดือน)</h3>
     <div class="chips" id="monthChips"></div>
     <div class="chart-flex" style="margin-top:6px"><div><canvas id="histPie" width="200" height="200"></canvas></div><div id="histLegend"></div></div>`;
   // ตารางสรุป
   h+=`<h3 style="font-family:'Prompt';font-size:15px;margin:22px 0 6px">${iconSm('folder')} รายการที่บันทึกไว้</h3>
     <div class="sub" style="margin:0 0 6px">เรียงตามลำดับนี้ (ใช้ ▲▼ ขยับเดือนขึ้น-ลง — มีผลกับกราฟเปรียบเทียบด้วย)</div>
-    <div class="tbl-wrap"><table><thead><tr><th>ลำดับ</th><th>เดือน/รอบ</th><th>บันทึกเมื่อ</th><th class="num">ยอดขาย</th><th class="num">คอมจ่าย</th><th class="num">คอมค้าง</th><th class="num">เงินเดือนสุทธิ</th><th>ตรวจพบ</th><th></th></tr></thead><tbody>`;
+    <div class="tbl-wrap hist-wrap"><table class="hist-table"><thead><tr><th>ลำดับ</th><th>เดือน/รอบ</th><th>บันทึกเมื่อ</th><th class="num">ยอดขาย</th><th class="num">คอมจ่าย</th><th class="num">คอมค้าง</th><th class="num">เงินเดือนสุทธิ</th><th>ตรวจพบ</th><th></th></tr></thead><tbody>`;
   hist.forEach((x,i)=>{
     const ds=thDate(new Date(x.savedAt)); const flag=(+x.mismatchCount||0)+(+x.reviewCount||0);
     const up = i>0 ? `<button class="ord-btn" data-movehist="${x.id}" data-dir="-1" title="ขึ้น">▲</button>` : `<span class="ord-btn dis">▲</span>`;
@@ -2297,7 +2355,7 @@ function loadHistory(){
     else if(pi.length && liveRemain<origPend) pendCell=`<span class="pend-amt">${fmt(liveRemain)}</span><br><span style="color:#94a3b8;font-size:11px">เดิม ${fmt(origPend)}</span>`;
     else pendCell=`<span class="pend-amt">${fmt(liveRemain)}</span>`;
     const selCls = (selRec&&x.id===selRec.id)?' rec-sel':'';
-    h+=`<tr class="recrow${selCls}" data-selid="${x.id}" title="คลิกเพื่อดูรายการค้างของเดือนนี้"><td><div class="ord">${up}${dn}</div></td><td><b>${esc(enMonth(x.month,true))}</b></td><td><span class="method">${ds}</span></td><td class="num">${fmt(+x.totalSales||0)}</td><td class="num">${fmt(+x.paidComm||0)}</td><td class="num">${pendCell}</td><td class="num"><b>${fmt(+x.net||0)}</b></td><td>${flag?`<span class="pill p-rev">${flag} จุด</span>`:'<span class="pill p-ok">✓</span>'}</td><td><button class="del-x" data-delhist="${x.id}" title="ลบ">${iconSm('trash')}</button></td></tr>`;
+    h+=`<tr class="recrow${selCls}" data-selid="${x.id}" title="คลิกเพื่อดูรายการค้างของเดือนนี้"><td class="h-ord"><div class="ord">${up}${dn}</div></td><td class="h-month"><b>${esc(enMonth(x.month,true))}</b></td><td class="h-date"><span class="method">${ds}</span></td><td class="num h-sales" data-l="ยอดขาย">${fmt(+x.totalSales||0)}</td><td class="num h-paid" data-l="คอมจ่าย">${fmt(+x.paidComm||0)}</td><td class="num h-pend" data-l="คอมค้าง">${pendCell}</td><td class="num h-net" data-l="เงินเดือนสุทธิ"><b>${fmt(+x.net||0)}</b></td><td class="h-flag">${flag?`<span class="pill p-rev">${flag} จุด</span>`:'<span class="pill p-ok">✓</span>'}</td><td class="h-del"><button class="del-x" data-delhist="${x.id}" title="ลบ">${iconSm('trash')}</button></td></tr>`;
   });
   h+='</tbody></table></div>';
 
@@ -2354,11 +2412,11 @@ function loadHistory(){
   const cev=collectionEvents();
   histBarChart=new Chart($('#histBar'),{type:'bar',
     data:{labels, datasets:[
-      {label:'คอมพร้อมจ่าย', data:hist.map(x=>+x.paidComm||0), backgroundColor:'#0ea5e9', borderRadius:6},
+      {label:'คอมพร้อมจ่าย', data:hist.map(x=>+x.paidComm||0), backgroundColor:'#1f66b3', borderRadius:6},
       {label:'คอมค้าง (ปัจจุบัน)', data:hist.map(x=>livePendingOf(x, cev)), backgroundColor:'#f59e0b', borderRadius:6},
       {label:'เงินเดือนสุทธิ', data:hist.map(x=>+x.net||0), backgroundColor:'#16a34a', borderRadius:6},
     ]},
-    options:{responsive:true, layout:{padding:{top:18}},
+    options:{responsive:true, maintainAspectRatio:false, layout:{padding:{top:18}},
       plugins:{legend:{position:'bottom',labels:{font:{family:'Kanit'}}}},
       scales:{y:{ticks:{font:{family:'Kanit'},callback:v=>v.toLocaleString()}},x:{ticks:{font:{family:'Kanit'}}}}},
     plugins:[barValueLabels]});
@@ -2481,6 +2539,7 @@ function importData(file){
   rd.readAsText(file);
 }
 $('#backupBtn').onclick=exportData;
+$('#quickBackup').onclick=exportData;
 function renderSnapInfo(){
   const el=$('#snapInfo'), btn=$('#undoBtn'); if(!el||!btn) return;
   const sn=getSnaps()[0];
