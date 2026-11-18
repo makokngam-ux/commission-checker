@@ -1212,7 +1212,7 @@ function detectCols(rows){
         else if(/เลข(ที่)?ใบสำคัญ/.test(h)) c.invoice=idx;
         else if(/ชื่อลูก(หนี้|ค้า)/.test(h)) c.cust=idx;
         else if(/รหัสลูก(หนี้|ค้า)/.test(h)) c.custCode=idx;
-        else if(/วันที่ใบสำคัญ/.test(h)) c.date=idx;
+        else if(/วันที่\s*(ที่)?\s*ใบสำคัญ/.test(h)) c.date=idx;   // ไฟล์บางเดือนพิมพ์หัวคอลัมน์เป็น "วันที่ที่ใบสำคัญ"
         else if(/อัตรา/.test(h)) c.rate=idx;
         else if(/ขาย\s*\/\s*watt/i.test(h)) c.totalW=idx;
         else if(/^watt$|^วัตต์$/i.test(h)) c.watt=idx;
