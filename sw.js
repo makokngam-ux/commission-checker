@@ -1,11 +1,11 @@
 /* Service Worker — ตรวจค่าคอม SSC (ทำให้ใช้งานออฟไลน์ + ติดตั้งเป็นแอปได้) */
-const CACHE = 'ssc-comm-v47';
+const CACHE = 'ssc-comm-v48';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './logo.png', './icon-192.png', './icon-512.png', './apple-touch-icon.png',
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js',
-  'https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Prompt:wght@500;600;700&display=swap'
+  'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=Noto+Serif+Thai:wght@500;600;700&display=swap'
 ];
 
 self.addEventListener('install', e => {
