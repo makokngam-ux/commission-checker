@@ -107,6 +107,12 @@ header{padding:30px 0 22px;display:flex;align-items:flex-start;justify-content:s
 .dashboard-charts{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:18px;margin-bottom:18px}
 .dash-chart{background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px;box-shadow:var(--shadow)}
 .dash-chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
+.rtoggle{cursor:pointer;user-select:none;align-items:center;margin-bottom:0}
+.rchev{width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s;flex-shrink:0;opacity:.6}
+.rcollapse.rcollapsed .rchev{transform:rotate(-45deg)}
+.rcollapse.rcollapsed #dashRecapBody{display:none}
+.rcollapse.rcollapsed{background:var(--blue-soft)}
+.rcollapse.rcollapsed .dash-chart-head{margin-bottom:0}
 .dash-chart h2{font-size:17px;display:flex;align-items:center;gap:8px}
 .dash-chart .period{font-family:'Prompt';font-size:12px;color:var(--brand2);background:var(--blue-soft);border-radius:999px;padding:6px 10px;white-space:nowrap}
 .month-bars{height:230px;display:flex;gap:14px;align-items:end;border-bottom:1px solid var(--line);padding-top:14px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
@@ -754,15 +760,15 @@ header{padding:25px 0 17px;align-items:center}
       </div>
       <div id="payoutBody"></div>
     </div>
-    <div class="dash-chart" id="dashRecap" style="margin-bottom:18px">
-      <div class="dash-chart-head">
+    <div class="dash-chart rcollapse rcollapsed" id="dashRecap" style="margin-bottom:18px">
+      <div class="dash-chart-head rtoggle" data-rtoggle>
         <div>
           <h2 id="dashRecapTitle"><span class="title-icon"><svg class="icon"><use href="#i-history"></use></svg></span>ข้อมูลล่าสุด</h2>
-          <p class="sub" style="margin:6px 0 0">สรุปจากเดือนที่บันทึกไว้ล่าสุด</p>
+          <p class="sub" style="margin:6px 0 0">แตะเพื่อดูสรุปเดือนล่าสุด</p>
         </div>
-        <span class="period" id="dashRecapTag">เดือนล่าสุด</span>
+        <span class="rchev" aria-hidden="true"></span>
       </div>
-      <div class="recap-grid" id="dashRecapBody">
+      <div class="recap-grid" id="dashRecapBody" style="margin-top:14px">
         <div class="recap-tile"><span>ยังไม่มีข้อมูล</span><b>—</b></div>
       </div>
     </div>
@@ -810,8 +816,10 @@ header{padding:25px 0 17px;align-items:center}
       <div class="btn-row">
         <button class="btn btn-primary" id="backupBtn"><svg class="icon icon-sm"><use href="#i-save"></use></svg>สำรองข้อมูล (ดาวน์โหลด)</button>
         <button class="btn btn-ghost" id="restoreBtn"><svg class="icon icon-sm"><use href="#i-upload"></use></svg>กู้คืนจากไฟล์</button>
+        <button class="btn btn-ghost" id="undoBtn"><svg class="icon icon-sm"><use href="#i-refresh"></use></svg>ย้อนกลับก่อนการเปลี่ยนแปลงล่าสุด</button>
         <input type="file" id="restoreFile" accept=".json,application/json" class="hide" />
       </div>
+      <p class="sub" id="snapInfo" style="margin:10px 0 0"></p>
     </div>
     <div class="card" id="rateCard">
       <h2><span class="title-icon"><svg class="icon"><use href="#i-trend"></use></svg></span>อัตราค่าคอม (แก้ไขได้)</h2>
@@ -956,17 +964,19 @@ function defaultPeriods(){
     },
   ];
 }
-function getPeriods(){ try{ const v=JSON.parse(localStorage.getItem(LS_RATES)); return Array.isArray(v)&&v.length?v:defaultPeriods(); }catch{ return defaultPeriods(); } }
+function getPeriods(){ try{ const v=JSON.parse(localStorage.getItem(LS_RATES)); return Array.isArray(v)&&v.length?v:defaultPeriods(); }catch{ try{ const raw=localStorage.getItem(LS_RATES); if(raw&&!localStorage.getItem(LS_RATES+'_corrupt')) localStorage.setItem(LS_RATES+'_corrupt',raw); }catch{} return defaultPeriods(); } }
 function savePeriods(p){ localStorage.setItem(LS_RATES, JSON.stringify(p)); }
 
 // เลือกชุดอัตราตามวันที่ในใบสำคัญ
+// "YYYY-MM-DD" ต้องตีความเป็นเที่ยงคืนเวลาเครื่อง (new Date('YYYY-MM-DD') เป็น UTC = 07:00 ไทย ทำให้ใบสำคัญของวันเริ่มช่วงหลุดไปใช้เรตเก่า)
+function localDay(str){ const m=String(str).match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/); return m? new Date(+m[1],+m[2]-1,+m[3]).getTime() : new Date(str).getTime(); }
 function pickPeriod(date){
   const ps=getPeriods();
   if(date instanceof Date && !isNaN(date)){
     const t=date.getTime();
     for(const p of ps){
-      const f = p.from? new Date(p.from).getTime() : -Infinity;
-      const to = p.to? new Date(p.to).getTime()+86399999 : Infinity;
+      const f = p.from? localDay(p.from) : -Infinity;
+      const to = p.to? localDay(p.to)+86399999 : Infinity;
       if(t>=f && t<=to) return p;
     }
   }
@@ -1334,9 +1344,9 @@ function render(model){
 
   // ---- watch list ----
   let watch='';
-  mism.forEach(x=>{ watch+=`<div class="watch">${watchIcon('alert')}<div><b>แถว ${x.rowIndex} · ${x.code} (${esc(x.customer)})</b><p>ไฟล์คิด ${fmt(x.fileComm)} ฿ แต่ควรเป็น <b>${fmt(x.expectedRounded)} ฿</b> · ต่าง ${fmt(Math.abs(x.fileComm-x.expectedRounded))} ฿ — ${esc(x.method)}</p></div></div>`; });
-  rev.forEach(x=>{ watch+=`<div class="watch">${watchIcon('alert')}<div><b>แถว ${x.rowIndex} · ${x.code}</b><p>${esc(x.note||'ต้องตรวจสอบเพิ่ม')} — ${esc(x.method)}</p></div></div>`; });
-  out.filter(x=>x.pendingText && x.pendingText.includes('ค้าง')).forEach(x=>{ watch+=`<div class="watch">${watchIcon('tag')}<div><b>แถว ${x.rowIndex} · ${x.code}</b><p>สินค้านอกตาราง แต่ไฟล์ระบุ "${esc(x.pendingText)}" → ควรเป็น "ไม่จ่าย"</p></div></div>`; });
+  mism.forEach(x=>{ watch+=`<div class="watch">${watchIcon('alert')}<div><b>แถว ${esc(x.rowIndex)} · ${esc(x.code)} (${esc(x.customer)})</b><p>ไฟล์คิด ${fmt(x.fileComm)} ฿ แต่ควรเป็น <b>${fmt(x.expectedRounded)} ฿</b> · ต่าง ${fmt(Math.abs(x.fileComm-x.expectedRounded))} ฿ — ${esc(x.method)}</p></div></div>`; });
+  rev.forEach(x=>{ watch+=`<div class="watch">${watchIcon('alert')}<div><b>แถว ${esc(x.rowIndex)} · ${esc(x.code)}</b><p>${esc(x.note||'ต้องตรวจสอบเพิ่ม')} — ${esc(x.method)}</p></div></div>`; });
+  out.filter(x=>x.pendingText && x.pendingText.includes('ค้าง')).forEach(x=>{ watch+=`<div class="watch">${watchIcon('tag')}<div><b>แถว ${esc(x.rowIndex)} · ${esc(x.code)}</b><p>สินค้านอกตาราง แต่ไฟล์ระบุ "${esc(x.pendingText)}" → ควรเป็น "ไม่จ่าย"</p></div></div>`; });
   if(model.pendingComm>0){ watch+=`<div class="watch info">${watchIcon('bulb')}<div><b>คอมที่จะได้เมื่อลูกค้าจ่าย</b><p>รวมสูงสุด ~${fmt(model.pendingComm)} ฿ จาก ${pend.length} รายการค้างชำระ — ติดตามเดือนหน้า</p></div></div>`; }
   if(watch) html += `<div class="card"><h2>${titleIcon('search')}จุดต้องระวัง / ติดตาม</h2><div class="sub">รายการที่ควรเช็คก่อนเซ็นรับเงิน</div>${watch}</div>`;
 
@@ -1635,12 +1645,14 @@ function categoryBreakdown(rows){ const b={}; rows.filter(r=>r.fileComm!=null&&r
 
 // ---- ที่เก็บข้อมูลในเครื่อง: ประวัติ + รายการค้างติดตามข้ามเดือน ----
 const LS_HIST='ssc_hist', LS_WATCH='ssc_watch';
-const getHist=()=>{ try{return JSON.parse(localStorage.getItem(LS_HIST))||[]}catch{return[]} };
+// ข้อมูลในเครื่องอ่านไม่ได้ (JSON เสีย) → เก็บข้อความดิบไว้ใน key สำรองก่อน กันถูกบันทึกค่าว่างทับ
+function quarantine(key){ try{ const raw=localStorage.getItem(key); if(raw && !localStorage.getItem(key+'_corrupt')) localStorage.setItem(key+'_corrupt',raw); }catch{} }
+const getHist=()=>{ try{ const v=JSON.parse(localStorage.getItem(LS_HIST)); return Array.isArray(v)?v:[]; }catch{ quarantine(LS_HIST); return[]; } };
 const setHist=h=>localStorage.setItem(LS_HIST,JSON.stringify(h));
 const getWatch=()=>{ try{ let w=JSON.parse(localStorage.getItem(LS_WATCH))||[];
   // migration: คีย์รุ่นเก่า (ไม่ขึ้นต้น "V2") → ล้าง ให้สร้างใหม่ด้วยคีย์รุ่นใหม่ (เลขใบ+รหัส+จำนวน) ตอน re-save
   if(w.length && w[0] && typeof w[0].key==='string' && w[0].key.slice(0,2)!=='V2'){ w=[]; localStorage.setItem(LS_WATCH,'[]'); }
-  return w; }catch{return[]} };
+  return w; }catch{ quarantine(LS_WATCH); return[]; } };
 const setWatch=w=>localStorage.setItem(LS_WATCH,JSON.stringify(w));
 // ชื่อลูกค้าเป็นภาษาไทย — ใช้ตัวแปลงที่เก็บอักษรไทยไว้ (norm() ตัดอักษรไทยทิ้ง ใช้กับรหัสสินค้าเท่านั้น)
 const normName=s=>String(s==null?'':s).replace(/\s+/g,'').toLowerCase();
@@ -1835,35 +1847,109 @@ function updateDataStatus(){
   const src=$('#dataSourceStatus'), time=$('#dataSyncStatus'), docs=$('#dataDocStatus'), dot=$('#dataStatusDot');
   if(src) src.textContent=cfg.url?'Google Sheet + ในเครื่อง':'ข้อมูลในเครื่อง';
   if(dot) dot.classList.toggle('local',!cfg.url);
-  if(time) time.textContent=sync.at?'ซิงก์ล่าสุด '+new Date(sync.at).toLocaleString('th-TH',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'ยังไม่เคยซิงก์';
+  if(time) time.textContent=(cfg.url&&isDirty())?'⚠️ มีข้อมูลที่ยังไม่ได้ส่งขึ้น Sheet (อยู่ในเครื่องนี้ครบ)':sync.at?'ซิงก์ล่าสุด '+new Date(sync.at).toLocaleString('th-TH',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'ยังไม่เคยซิงก์';
   const keys=new Set(); hist.forEach(h=>(h.salesItems||[]).forEach(it=>keys.add(norm(it.invoiceNo||'')||[it.docDate,it.code,it.sales].join('|'))));
   if(docs) docs.textContent=keys.size+' เอกสาร';
 }
 
-/* ===== ซิงก์ข้ามเครื่องผ่าน Google Sheet (ประวัติ+เรต+รายการค้าง) ===== */
+/* ===== ซิงก์ข้ามเครื่องผ่าน Google Sheet (ประวัติ+เรต+รายการค้าง) =====
+   หลักกันข้อมูลหาย:
+   - ทุกครั้งที่แก้ข้อมูลในเครื่อง → ตั้งธง "ยังไม่ได้ซิงก์" (LS_DIRTY) และล้างธงเมื่อ Sheet ตอบ ok จริงเท่านั้น
+   - ตอนดึงจาก Sheet: ถ้าเครื่องนี้มีของที่ยังไม่ได้ซิงก์ จะไม่เขียนทับ — เก็บของในเครื่องไว้/รวมกับ Sheet แล้วส่งขึ้นใหม่
+   - ก่อนเขียนทับ/ลบ/กู้คืนทุกครั้ง เก็บสแนปช็อตไว้ในเครื่อง (ย้อนกลับได้จากแท็บตั้งค่า) */
+const LS_DIRTY='ssc_sync_dirty', LS_SIG='ssc_sync_sig', LS_SNAPS='ssc_safety_snaps';
+const SNAP_KEEP=6;
 function appState(){ return JSON.stringify({ v:1, hist:getHist(), watch:getWatch(), rates:getPeriods() }); }
+function sigOf(str){ let h=5381; for(let i=0;i<str.length;i++) h=((h<<5)+h+str.charCodeAt(i))|0; return str.length+':'+h; }
+const lsGet=k=>{ try{return localStorage.getItem(k);}catch{return null;} };
+const lsSet=(k,v)=>{ try{localStorage.setItem(k,v);return true;}catch{return false;} };
+const isDirty=()=>lsGet(LS_DIRTY)==='1';
+function getSnaps(){ try{ const v=JSON.parse(lsGet(LS_SNAPS)); return Array.isArray(v)?v:[]; }catch{ return []; } }
+// เก็บสำเนาข้อมูลปัจจุบันก่อนทำสิ่งที่ย้อนไม่ได้ (เก็บ SNAP_KEEP ชุดล่าสุด · ข้ามถ้าเหมือนชุดก่อนหน้า)
+function takeSnapshot(reason){
+  const state=appState(); const snaps=getSnaps();
+  if(snaps.length && snaps[0].state===state) return;
+  snaps.unshift({at:new Date().toISOString(), reason:reason||'', state});
+  while(snaps.length>SNAP_KEEP) snaps.pop();
+  while(snaps.length && !lsSet(LS_SNAPS,JSON.stringify(snaps))) snaps.pop();   // พื้นที่เต็ม → ทิ้งชุดเก่าสุดจนเก็บได้
+}
+function applyState(s){
+  if(Array.isArray(s.hist)) setHist(s.hist);
+  if(Array.isArray(s.watch)) setWatch(s.watch);
+  if(Array.isArray(s.rates)&&s.rates.length) savePeriods(s.rates);
+}
+// รวมข้อมูล 2 ฝั่งแบบไม่ทิ้งของใคร: เดือนเดียวกันเอาชุดที่บันทึกล่าสุด, เดือนที่มีฝั่งเดียวเก็บไว้
+function mergeStates(local, cloud){
+  const hk=h=>(h.month||h.id||'')+'|'+(h.name||DEFAULT_NAME);
+  const out=(cloud.hist||[]).slice(); const pos=new Map(out.map((h,i)=>[hk(h),i]));
+  (local.hist||[]).forEach(h=>{ const k=hk(h);
+    if(!pos.has(k)){ pos.set(k,out.length); out.push(h); }
+    else if(String(h.savedAt||'')>=String(out[pos.get(k)].savedAt||'')) out[pos.get(k)]=h; });
+  const watch=(local.watch||[]).slice(); const wk=new Set(watch.map(w=>w&&w.key));
+  (cloud.watch||[]).forEach(w=>{ if(w&&!wk.has(w.key)){ wk.add(w.key); watch.push(w); } });
+  return {v:1, hist:out, watch, rates:(local.rates&&local.rates.length)?local.rates:cloud.rates};
+}
+function syncWarn(msg){ updateDataStatus(); if(msg) toast(msg,'err'); }
+// ส่ง state ขึ้น Sheet — สำเร็จเมื่อ Sheet ตอบ ok:true เท่านั้น
+function sendState(){
+  const cfg=getCfg(); if(!cfg.url) return Promise.resolve(false);
+  const state=appState();
+  return fetch(cfg.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'savestate',state})})
+    .then(r=>r.json()).then(res=>{
+      if(!res||!res.ok) throw new Error((res&&res.error)||'Sheet ไม่รับข้อมูล');
+      lsSet(LS_SIG,sigOf(state));
+      if(appState()===state) lsSet(LS_DIRTY,'0');          // ระหว่างส่งไม่มีการแก้เพิ่ม → ถือว่าซิงก์ครบ
+      markDataSync('Google Sheet'); updateDataStatus(); return true; });
+}
 let _pushT=null;
-function pushState(){                                  // ส่ง state ขึ้น Sheet (debounce กันยิงถี่)
+function pushState(){                                  // เรียกทุกครั้งที่แก้ข้อมูลในเครื่อง (debounce กันยิงถี่)
+  lsSet(LS_DIRTY,'1');
   const cfg=getCfg(); if(!cfg.url) return;
   clearTimeout(_pushT);
-  _pushT=setTimeout(()=>{
-    fetch(cfg.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({action:'savestate',state:appState()})})
-      .then(()=>{markDataSync('Google Sheet');updateDataStatus();}).catch(()=>{});
-  },700);
+  _pushT=setTimeout(()=>{ sendState().catch(err=>syncWarn('ยังส่งขึ้น Google Sheet ไม่สำเร็จ — ข้อมูลยังอยู่ในเครื่องนี้ครบ ('+err.message+')')); },700);
 }
-function pullState(cb){                                 // ดึง state จาก Sheet มาเขียนทับในเครื่อง
+// ดึง state จาก Sheet — cb(true)=ข้อมูลในเครื่องถูกอัปเดต · force=true คือผู้ใช้กดดึงเอง (ยอมเขียนทับ แต่เก็บสแนปช็อตก่อน)
+function pullState(cb, force){
   const cfg=getCfg(); if(!cfg.url){ cb&&cb(false); return; }
   fetch(cfg.url+'?action=getstate').then(r=>r.json()).then(res=>{
-    if(res&&res.ok&&res.state){ try{ const s=JSON.parse(res.state);
-      if(Array.isArray(s.hist)) setHist(s.hist);
-      if(Array.isArray(s.watch)) setWatch(s.watch);
-      if(Array.isArray(s.rates)&&s.rates.length) savePeriods(s.rates);
-      markDataSync('Google Sheet'); updateDataStatus();
-      cb&&cb(true); return;
-    }catch(e){} }
-    cb&&cb(false);
+    if(!(res&&res.ok)){ cb&&cb(false); return; }
+    const localStr=appState(), local=JSON.parse(localStr);
+    if(!res.state){                                      // Sheet ยังว่าง → ส่งของในเครื่องขึ้นไปแทน ไม่ล้างเครื่อง
+      if(local.hist.length) pushState();
+      cb&&cb(false); return; }
+    let cloud; try{ cloud=JSON.parse(res.state); }catch(e){ syncWarn('ข้อมูลใน Sheet อ่านไม่ได้ — ไม่ได้เขียนทับข้อมูลในเครื่อง'); cb&&cb(false); return; }
+    if(!cloud||!Array.isArray(cloud.hist)){ cb&&cb(false); return; }
+    const cloudSig=sigOf(res.state), knownSig=lsGet(LS_SIG);
+    if(res.state===localStr){ lsSet(LS_SIG,cloudSig); lsSet(LS_DIRTY,'0'); markDataSync('Google Sheet'); updateDataStatus(); cb&&cb(false); return; }
+    if(force){
+      takeSnapshot('ก่อนดึงข้อมูลจาก Sheet (กดเอง)');
+      applyState(cloud); lsSet(LS_SIG,cloudSig); lsSet(LS_DIRTY,'0');
+      markDataSync('Google Sheet'); updateDataStatus(); cb&&cb(true); return; }
+    const dirty=isDirty();
+    if(dirty && knownSig===cloudSig){ pushState(); cb&&cb(false); return; }   // Sheet ไม่เปลี่ยน มีแต่เครื่องนี้ที่ใหม่กว่า → ส่งขึ้น
+    if(!dirty && knownSig){
+      if(!cloud.hist.length && local.hist.length){          // กัน Sheet ว่างมาล้างเครื่อง
+        syncWarn('Google Sheet ไม่มีประวัติ แต่เครื่องนี้มี — ไม่ได้เขียนทับ (กด "ดันข้อมูลขึ้น Sheet" ในตั้งค่าถ้าต้องการใช้ข้อมูลเครื่องนี้)');
+        cb&&cb(false); return; }
+      takeSnapshot('ก่อนรับข้อมูลใหม่จาก Sheet');           // เครื่องนี้ซิงก์ครบแล้ว และ Sheet มีของใหม่จากเครื่องอื่น → รับมา
+      applyState(cloud); lsSet(LS_SIG,cloudSig);
+      markDataSync('Google Sheet'); updateDataStatus(); cb&&cb(true); return; }
+    // ทั้งสองฝั่งมีของที่อีกฝั่งอาจไม่มี (หรือเปิดครั้งแรกหลังอัปเดตแอป) → รวมกัน ไม่ทิ้งของใคร
+    takeSnapshot('ก่อนรวมข้อมูลเครื่องนี้กับ Sheet');
+    const merged=mergeStates(local,cloud);
+    applyState(merged);
+    if(appState()===res.state){ lsSet(LS_SIG,cloudSig); lsSet(LS_DIRTY,'0'); markDataSync('Google Sheet'); updateDataStatus(); }
+    else pushState();
+    cb&&cb(true);
   }).catch(()=>cb&&cb(false));
+}
+// ย้อนกลับไปใช้สแนปช็อตล่าสุด (สแนปช็อตของสถานะปัจจุบันถูกเก็บก่อน จึงย้อนไป-มาได้)
+function restoreSnapshot(i){
+  const snaps=getSnaps(); const sn=snaps[i]; if(!sn) return false;
+  let s; try{ s=JSON.parse(sn.state); }catch{ return false; }
+  takeSnapshot('ก่อนย้อนกลับ');
+  applyState(s); pushState(); return true;
 }
 
 function gatherSalary(){
@@ -1938,7 +2024,7 @@ function saveCheck(model){
   // 1) บันทึกในเครื่อง (ใช้ทำกราฟย้อนหลัง) — upsert ตาม เดือน+ชื่อ: มีเดือนเดิม=เขียนทับ ไม่เพิ่มซ้ำ
   const hist=getHist();
   const idx=month ? hist.findIndex(h=>h.month===month && (h.name||name)===name) : -1;
-  if(idx>=0){ rec.id=hist[idx].id; hist[idx]=rec; } else { hist.push(rec); }
+  if(idx>=0){ takeSnapshot('ก่อนบันทึกทับเดือน '+month); rec.id=hist[idx].id; hist[idx]=rec; } else { hist.push(rec); }
   setHist(hist);
   // 2) อัปเดตรายการติดตามค้างข้ามเดือน + reconcile ทุกเดือน (ตัดที่จ่ายแล้วออก ไม่ขึ้นกับลำดับ)
   commitWatch(model, month);
@@ -2291,6 +2377,7 @@ $('#historyBody').addEventListener('click',e=>{
   const id=delBtn&&delBtn.dataset.delhist;
   if(id){ if(!armAction(delBtn,'ยืนยันลบ')) return;
     const rec=getHist().find(x=>x.id===id);                 // เก็บ month+name ไว้ลบใน Sheet ด้วย
+    takeSnapshot('ก่อนลบเดือน '+((rec&&rec.month)||''));
     setHist(getHist().filter(x=>x.id!==id)); pushState(); loadHistory(); renderDashboard();
     const cfg=getCfg();                                     // ลบแถวใน Summary/Detail sheet ตรงด้วย (ถ้าตั้ง URL)
     if(cfg.url && rec && rec.month){
@@ -2349,7 +2436,7 @@ function initSettings(){
   const cfg=getCfg(); $('#setUrl').value=cfg.url||'';
 }
 $('#saveSettings').onclick=()=>{ setCfg({url:$('#setUrl').value.trim()}); updateDataStatus(); toast('บันทึกการตั้งค่าแล้ว');
-  pullState(ok=>{ if(ok){ loadEditor(); if(!$('#tab-history').classList.contains('hide')) loadHistory(); toast('ดึงข้อมูลจาก Google Sheet มาแล้ว'); } }); };
+  pullState(ok=>{ if(ok){ loadEditor(); renderDashboard(); renderSnapInfo(); if(!$('#tab-history').classList.contains('hide')) loadHistory(); toast('ซิงก์ข้อมูลกับ Google Sheet แล้ว'); } }); };
 $('#testUrl').onclick=()=>{
   const url=$('#setUrl').value.trim(); if(!url){toast('ใส่ URL ก่อน','err');return;}
   toast('กำลังทดสอบ...');
@@ -2357,12 +2444,13 @@ $('#testUrl').onclick=()=>{
 };
 $('#refreshHist').onclick=loadHistory;
 $('#syncUp').onclick=()=>{ const cfg=getCfg(); if(!cfg.url){toast('ใส่ URL ก่อน','err');return;}
-  toast('กำลังดันข้อมูลขึ้น...');
-  fetch(cfg.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'savestate',state:appState()})})
-    .then(r=>r.json()).then(res=>{if(res.ok){markDataSync('Google Sheet');updateDataStatus();}toast(res.ok?'ดันข้อมูลขึ้น Sheet แล้ว ✓':'ไม่สำเร็จ',res.ok?'':'err');}).catch(e=>toast('ไม่สำเร็จ: '+e.message,'err')); };
+  toast('กำลังดันข้อมูลขึ้น...'); lsSet(LS_DIRTY,'1');
+  sendState().then(()=>toast('ดันข้อมูลขึ้น Sheet แล้ว ✓')).catch(e=>syncWarn('ไม่สำเร็จ: '+e.message)); };
 $('#syncDown').onclick=()=>{ const cfg=getCfg(); if(!cfg.url){toast('ใส่ URL ก่อน','err');return;}
+  if(isDirty() && !confirm('เครื่องนี้มีข้อมูลที่ยังไม่ได้ส่งขึ้น Sheet\nดึงลงมาจะแทนที่ข้อมูลในเครื่องด้วยของใน Sheet (ย้อนกลับได้จากปุ่ม "ย้อนกลับ")\nยืนยันไหม?')) return;
   toast('กำลังดึงข้อมูล...');
-  pullState(ok=>{ if(ok){ loadEditor(); if(!$('#tab-history').classList.contains('hide')) loadHistory(); toast('ดึงข้อมูลจาก Sheet แล้ว ✓'); } else toast('ไม่มีข้อมูลใน Sheet / เชื่อมต่อไม่ได้','err'); }); };
+  pullState(ok=>{ loadEditor(); renderDashboard(); renderSnapInfo(); if(!$('#tab-history').classList.contains('hide')) loadHistory();
+    toast(ok?'ดึงข้อมูลจาก Sheet แล้ว ✓':'ข้อมูลตรงกับ Sheet อยู่แล้ว / เชื่อมต่อไม่ได้', ok?'':'err'); }, true); };
 
 /* ===== สำรอง / กู้คืนข้อมูล (ทุก key ใน localStorage ของแอป) ===== */
 const BACKUP_KEYS=['ssc_hist','ssc_watch','ssc_rate_periods_v2','ssc_comm_cfg'];
@@ -2381,14 +2469,27 @@ function importData(file){
   rd.onload=e=>{ try{
     const dump=JSON.parse(e.target.result);
     if(!dump||!dump.data||dump._app!=='ssc-commission-checker') throw new Error('ไม่ใช่ไฟล์สำรองของแอปนี้');
-    if(!confirm('กู้คืนจะเขียนทับข้อมูลปัจจุบันทั้งหมด ยืนยันไหม?')) return;
-    Object.entries(dump.data).forEach(([k,v])=>localStorage.setItem(k,String(v)));
-    initSettings(); loadEditor(); pushState();
+    const entries=Object.entries(dump.data).filter(([k])=>BACKUP_KEYS.includes(k));
+    entries.forEach(([k,v])=>{ if(k!=='ssc_comm_cfg'){ const a=JSON.parse(String(v)); if(!Array.isArray(a)) throw new Error('ไฟล์สำรองเสียหาย ('+k+')'); } });
+    if(!entries.length) throw new Error('ไฟล์สำรองไม่มีข้อมูล');
+    if(!confirm('กู้คืนจะเขียนทับข้อมูลปัจจุบันทั้งหมด (แอปจะดาวน์โหลดสำรองข้อมูลปัจจุบันให้ก่อน) ยืนยันไหม?')) return;
+    takeSnapshot('ก่อนกู้คืนจากไฟล์'); exportData();
+    entries.forEach(([k,v])=>localStorage.setItem(k,String(v)));
+    initSettings(); loadEditor(); renderDashboard(); renderSnapInfo(); pushState();
     toast('กู้คืนข้อมูลสำเร็จ ✓ (ไปดูที่แท็บประวัติได้เลย)');
   }catch(err){ toast('กู้คืนไม่สำเร็จ: '+err.message,'err'); } };
   rd.readAsText(file);
 }
 $('#backupBtn').onclick=exportData;
+function renderSnapInfo(){
+  const el=$('#snapInfo'), btn=$('#undoBtn'); if(!el||!btn) return;
+  const sn=getSnaps()[0];
+  btn.disabled=!sn;
+  el.textContent=sn?('จุดย้อนกลับล่าสุด: '+new Date(sn.at).toLocaleString('th-TH',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})+' · '+sn.reason):'ยังไม่มีจุดย้อนกลับ (แอปจะเก็บให้อัตโนมัติก่อนลบ/เขียนทับ/กู้คืน)';
+}
+$('#undoBtn').onclick=e=>{ if(!armAction(e.currentTarget,'ยืนยันย้อนกลับ')) return;
+  if(restoreSnapshot(0)){ loadEditor(); renderDashboard(); renderSnapInfo(); if(!$('#tab-history').classList.contains('hide')) loadHistory(); toast('ย้อนกลับข้อมูลแล้ว ✓'); }
+  else toast('ย้อนกลับไม่สำเร็จ','err'); };
 $('#restoreBtn').onclick=()=>$('#restoreFile').click();
 $('#restoreFile').onchange=e=>{ if(e.target.files[0]){ importData(e.target.files[0]); e.target.value=''; } };
 
@@ -2485,7 +2586,7 @@ $('#addPeriod').onclick=()=>{ EDIT_PERIODS.push({id:'p'+EDIT_PERIODS.length,name
 $('#dupPeriod').onclick=()=>{ const c=JSON.parse(JSON.stringify(EDIT_PERIODS[curP])); c.name+=' (สำเนา)'; c.id='p'+Date.now()%100000; EDIT_PERIODS.splice(curP+1,0,c); curP++; renderEditor(); };
 $('#delPeriod').onclick=e=>{ if(EDIT_PERIODS.length<=1){ toast('ต้องมีอย่างน้อย 1 ชุด','err'); return; } if(!armAction(e.currentTarget,'ยืนยันลบชุด')) return; EDIT_PERIODS.splice(curP,1); if(curP>0)curP--; renderEditor(); };
 $('#saveRates').onclick=()=>{ savePeriods(EDIT_PERIODS); pushState(); toast('บันทึกอัตราแล้ว — ตรวจไฟล์ครั้งต่อไปจะใช้เรตใหม่'); };
-$('#resetRates').onclick=e=>{ if(!armAction(e.currentTarget,'ยืนยันคืนค่า')) return; localStorage.removeItem(LS_RATES); curP=0; loadEditor(); initRateFolds(); toast('คืนค่าเริ่มต้นแล้ว'); };
+$('#resetRates').onclick=e=>{ if(!armAction(e.currentTarget,'ยืนยันคืนค่า')) return; takeSnapshot('ก่อนคืนค่าอัตราเริ่มต้น'); localStorage.removeItem(LS_RATES); pushState(); curP=0; loadEditor(); initRateFolds(); toast('คืนค่าเริ่มต้นแล้ว'); };
 
 // พับ/กางการ์ด collapsible (ตั้งค่า Google Sheet · สำรอง/กู้คืน)
 // ปุ่มหมุด: กดเปิดแผง (กดซ้ำ=ปิด) เปิดได้ทีละแผง
@@ -2495,6 +2596,8 @@ document.addEventListener('click', e=>{ const p=e.target.closest('.pin-btn'); if
   $$('.pin-panel').forEach(x=>x.classList.add('hide'));
   if(!wasActive){ p.classList.add('active'); const panel=document.querySelector(`[data-pinpanel="${key}"]`); if(panel) panel.classList.remove('hide'); }
 });
+// ซ่อน/กาง การ์ดสรุปเดือนล่าสุด (recap) — แตะหัวการ์ดเพื่อเปิด-ปิด
+document.addEventListener('click', e=>{ const t=e.target.closest('[data-rtoggle]'); if(t&&t.closest('.rcollapse')) t.closest('.rcollapse').classList.toggle('rcollapsed'); });
 
 initSettings();
 loadEditor();
@@ -2506,8 +2609,12 @@ renderDashboard();                                // โชว์เลขจร
 pullState(ok=>{ if(ok){ loadEditor(); initRateFolds();
   if(reconcileWatchFromHistory()) pushState();      // reconcile หลังดึงข้อมูลจาก Sheet
   renderDashboard();
+  renderSnapInfo();
   if(!$('#tab-history').classList.contains('hide')) loadHistory();
   toast('ซิงก์ข้อมูลจาก Google Sheet แล้ว'); } });
+renderSnapInfo();
+// ขอให้เบราว์เซอร์เก็บข้อมูลแอปแบบถาวร (ลดโอกาสถูกล้างอัตโนมัติเมื่อพื้นที่เครื่องเต็ม)
+try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch{}
 
 /* ===== ลงทะเบียน Service Worker (PWA — ติดตั้ง + ออฟไลน์) ===== */
 /* ทำงานเฉพาะตอนเปิดผ่านเว็บ (http/https) เช่น GitHub Pages — เปิดผ่านไฟล์ file:// จะข้ามไป */
