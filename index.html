@@ -2036,6 +2036,11 @@ function sendState(){
       body:JSON.stringify({action:'savestate',state})})
     .then(r=>r.json()).then(res=>{
       if(!res||!res.ok) throw new Error((res&&res.error)||'Sheet ไม่รับข้อมูล');
+      // อ่านกลับมาตรวจว่า Sheet เก็บชุดนี้จริง — Apps Script รุ่นเดิมตอบ ok ได้แม้เขียนไม่สำเร็จ (ข้อมูลเกิน 50,000 ตัวอักษร/เซลล์)
+      return fetch(cfg.url+'?action=getstate').then(r=>r.json()).then(chk=>{
+        if(!chk||!chk.ok||chk.state!==state) throw new Error('Sheet ยังไม่ได้เก็บข้อมูลชุดล่าสุด (ต้องอัปเดต Apps Script)');
+        return true; });
+    }).then(()=>{
       lsSet(LS_SIG,sigOf(state));
       if(appState()===state) lsSet(LS_DIRTY,'0');          // ระหว่างส่งไม่มีการแก้เพิ่ม → ถือว่าซิงก์ครบ
       markDataSync('Google Sheet'); updateDataStatus(); return true; });
