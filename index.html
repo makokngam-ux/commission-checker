@@ -1986,7 +1986,12 @@ function updateDataStatus(){
    - ก่อนเขียนทับ/ลบ/กู้คืนทุกครั้ง เก็บสแนปช็อตไว้ในเครื่อง (ย้อนกลับได้จากแท็บตั้งค่า) */
 const LS_DIRTY='ssc_sync_dirty', LS_SIG='ssc_sync_sig', LS_SNAPS='ssc_safety_snaps';
 const SNAP_KEEP=6;
-function appState(){ return JSON.stringify({ v:1, hist:getHist(), watch:getWatch(), rates:getPeriods() }); }
+const LS_TOMBS='ssc_deleted_months';
+// รายการ "เดือนที่ตั้งใจลบ" — ใช้บอกเครื่องอื่นว่าเดือนนี้ลบจริง (ไม่ใช่หายเพราะซิงก์พลาด)
+function getTombs(){ try{ const v=JSON.parse(lsGet(LS_TOMBS)); return Array.isArray(v)?v:[]; }catch{ return []; } }
+function addTomb(rec){ if(!rec) return; const t=getTombs().filter(x=>x.k!==histKey(rec)); t.push({k:histKey(rec),at:new Date().toISOString()}); lsSet(LS_TOMBS,JSON.stringify(t.slice(-60))); }
+const histKey=h=>(h.month||h.id||'')+'|'+(h.name||DEFAULT_NAME);
+function appState(){ const o={ v:1, hist:getHist(), watch:getWatch(), rates:getPeriods() }; const d=getTombs(); if(d.length) o.del=d; return JSON.stringify(o); }
 function sigOf(str){ let h=5381; for(let i=0;i<str.length;i++) h=((h<<5)+h+str.charCodeAt(i))|0; return str.length+':'+h; }
 const lsGet=k=>{ try{return localStorage.getItem(k);}catch{return null;} };
 const lsSet=(k,v)=>{ try{localStorage.setItem(k,v);return true;}catch{return false;} };
@@ -2001,20 +2006,26 @@ function takeSnapshot(reason){
   while(snaps.length && !lsSet(LS_SNAPS,JSON.stringify(snaps))) snaps.pop();   // พื้นที่เต็ม → ทิ้งชุดเก่าสุดจนเก็บได้
 }
 function applyState(s){
+  if(Array.isArray(s.del)) lsSet(LS_TOMBS,JSON.stringify(s.del));
   if(Array.isArray(s.hist)) setHist(s.hist);
   if(Array.isArray(s.watch)) setWatch(s.watch);
   if(Array.isArray(s.rates)&&s.rates.length) savePeriods(s.rates);
 }
 // รวมข้อมูล 2 ฝั่งแบบไม่ทิ้งของใคร: เดือนเดียวกันเอาชุดที่บันทึกล่าสุด, เดือนที่มีฝั่งเดียวเก็บไว้
-function mergeStates(local, cloud){
-  const hk=h=>(h.month||h.id||'')+'|'+(h.name||DEFAULT_NAME);
-  const out=(cloud.hist||[]).slice(); const pos=new Map(out.map((h,i)=>[hk(h),i]));
-  (local.hist||[]).forEach(h=>{ const k=hk(h);
+// เดือนจะหายได้ทางเดียวคือมี "บันทึกการลบ" (del) ที่ใหม่กว่าเวลาบันทึกของเดือนนั้น
+function mergeStates(local, cloud, preferLocal){
+  const tm=new Map(); [...(cloud.del||[]),...(local.del||[])].forEach(t=>{ if(t&&t.k&&(!tm.has(t.k)||String(t.at)>String(tm.get(t.k)))) tm.set(t.k,String(t.at)); });
+  const alive=h=>!(tm.has(histKey(h)) && String(h.savedAt||'')<=tm.get(histKey(h)));
+  const out=(cloud.hist||[]).filter(alive); const pos=new Map(out.map((h,i)=>[histKey(h),i]));
+  (local.hist||[]).filter(alive).forEach(h=>{ const k=histKey(h);
     if(!pos.has(k)){ pos.set(k,out.length); out.push(h); }
-    else if(String(h.savedAt||'')>=String(out[pos.get(k)].savedAt||'')) out[pos.get(k)]=h; });
-  const watch=(local.watch||[]).slice(); const wk=new Set(watch.map(w=>w&&w.key));
-  (cloud.watch||[]).forEach(w=>{ if(w&&!wk.has(w.key)){ wk.add(w.key); watch.push(w); } });
-  return {v:1, hist:out, watch, rates:(local.rates&&local.rates.length)?local.rates:cloud.rates};
+    else { const c=out[pos.get(k)], a=String(h.savedAt||''), b=String(c.savedAt||''); if(a>b || (a===b&&preferLocal)) out[pos.get(k)]=h; } });
+  const first=preferLocal?local:cloud, second=preferLocal?cloud:local;
+  const watch=(first.watch||[]).slice(); const wk=new Set(watch.map(w=>w&&w.key));
+  (second.watch||[]).forEach(w=>{ if(w&&!wk.has(w.key)){ wk.add(w.key); watch.push(w); } });
+  const rates=(first.rates&&first.rates.length)?first.rates:second.rates;
+  const o={v:1, hist:out, watch, rates}; const del=[...tm].map(([k,at])=>({k,at})).slice(-60); if(del.length) o.del=del;
+  return o;
 }
 function syncWarn(msg){ updateDataStatus(); if(msg) toast(msg,'err'); }
 // ส่ง state ขึ้น Sheet — สำเร็จเมื่อ Sheet ตอบ ok:true เท่านั้น
@@ -2049,26 +2060,14 @@ function pullState(cb, force){
     if(!cloud||!Array.isArray(cloud.hist)){ cb&&cb(false); return; }
     const cloudSig=sigOf(res.state), knownSig=lsGet(LS_SIG);
     if(res.state===localStr){ lsSet(LS_SIG,cloudSig); lsSet(LS_DIRTY,'0'); markDataSync('Google Sheet'); updateDataStatus(); cb&&cb(false); return; }
-    if(force){
-      takeSnapshot('ก่อนดึงข้อมูลจาก Sheet (กดเอง)');
-      applyState(cloud); lsSet(LS_SIG,cloudSig); lsSet(LS_DIRTY,'0');
-      markDataSync('Google Sheet'); updateDataStatus(); cb&&cb(true); return; }
-    const dirty=isDirty();
-    if(dirty && knownSig===cloudSig){ pushState(); cb&&cb(false); return; }   // Sheet ไม่เปลี่ยน มีแต่เครื่องนี้ที่ใหม่กว่า → ส่งขึ้น
-    if(!dirty && knownSig){
-      if(!cloud.hist.length && local.hist.length){          // กัน Sheet ว่างมาล้างเครื่อง
-        syncWarn('Google Sheet ไม่มีประวัติ แต่เครื่องนี้มี — ไม่ได้เขียนทับ (กด "ดันข้อมูลขึ้น Sheet" ในตั้งค่าถ้าต้องการใช้ข้อมูลเครื่องนี้)');
-        cb&&cb(false); return; }
-      takeSnapshot('ก่อนรับข้อมูลใหม่จาก Sheet');           // เครื่องนี้ซิงก์ครบแล้ว และ Sheet มีของใหม่จากเครื่องอื่น → รับมา
-      applyState(cloud); lsSet(LS_SIG,cloudSig);
-      markDataSync('Google Sheet'); updateDataStatus(); cb&&cb(true); return; }
-    // ทั้งสองฝั่งมีของที่อีกฝั่งอาจไม่มี (หรือเปิดครั้งแรกหลังอัปเดตแอป) → รวมกัน ไม่ทิ้งของใคร
-    takeSnapshot('ก่อนรวมข้อมูลเครื่องนี้กับ Sheet');
-    const merged=mergeStates(local,cloud);
-    applyState(merged);
-    if(appState()===res.state){ lsSet(LS_SIG,cloudSig); lsSet(LS_DIRTY,'0'); markDataSync('Google Sheet'); updateDataStatus(); }
-    else pushState();
-    cb&&cb(true);
+    // ซิงก์อัตโนมัติ = รวมสองฝั่งเสมอ ไม่ทิ้งเดือนของฝั่งไหน (เครื่องที่มีของค้างส่ง ให้ของเครื่องนี้ชนะเมื่อเวลาเท่ากัน)
+    const merged=mergeStates(local,cloud,isDirty());
+    const mergedStr=JSON.stringify(merged);
+    if(mergedStr!==localStr){ takeSnapshot('ก่อนรวมข้อมูลเครื่องนี้กับ Sheet'); applyState(merged); }
+    const after=appState();
+    if(after===res.state){ lsSet(LS_SIG,cloudSig); lsSet(LS_DIRTY,'0'); markDataSync('Google Sheet'); updateDataStatus(); }
+    else pushState();                                     // เครื่องนี้มีของที่ Sheet ยังไม่มี → ส่งขึ้น
+    cb&&cb(after!==localStr);
   }).catch(()=>cb&&cb(false));
 }
 // ย้อนกลับไปใช้สแนปช็อตล่าสุด (สแนปช็อตของสถานะปัจจุบันถูกเก็บก่อน จึงย้อนไป-มาได้)
@@ -2504,7 +2503,7 @@ $('#historyBody').addEventListener('click',e=>{
   const id=delBtn&&delBtn.dataset.delhist;
   if(id){ if(!armAction(delBtn,'ยืนยันลบ')) return;
     const rec=getHist().find(x=>x.id===id);                 // เก็บ month+name ไว้ลบใน Sheet ด้วย
-    takeSnapshot('ก่อนลบเดือน '+((rec&&rec.month)||''));
+    takeSnapshot('ก่อนลบเดือน '+((rec&&rec.month)||'')); addTomb(rec);
     setHist(getHist().filter(x=>x.id!==id)); pushState(); loadHistory(); renderDashboard();
     const cfg=getCfg();                                     // ลบแถวใน Summary/Detail sheet ตรงด้วย (ถ้าตั้ง URL)
     if(cfg.url && rec && rec.month){
@@ -2574,13 +2573,12 @@ $('#syncUp').onclick=()=>{ const cfg=getCfg(); if(!cfg.url){toast('ใส่ URL
   toast('กำลังดันข้อมูลขึ้น...'); lsSet(LS_DIRTY,'1');
   sendState().then(()=>toast('ดันข้อมูลขึ้น Sheet แล้ว ✓')).catch(e=>syncWarn('ไม่สำเร็จ: '+e.message)); };
 $('#syncDown').onclick=()=>{ const cfg=getCfg(); if(!cfg.url){toast('ใส่ URL ก่อน','err');return;}
-  if(isDirty() && !confirm('เครื่องนี้มีข้อมูลที่ยังไม่ได้ส่งขึ้น Sheet\nดึงลงมาจะแทนที่ข้อมูลในเครื่องด้วยของใน Sheet (ย้อนกลับได้จากปุ่ม "ย้อนกลับ")\nยืนยันไหม?')) return;
   toast('กำลังดึงข้อมูล...');
   pullState(ok=>{ loadEditor(); renderDashboard(); renderSnapInfo(); if(!$('#tab-history').classList.contains('hide')) loadHistory();
     toast(ok?'ดึงข้อมูลจาก Sheet แล้ว ✓':'ข้อมูลตรงกับ Sheet อยู่แล้ว / เชื่อมต่อไม่ได้', ok?'':'err'); }, true); };
 
 /* ===== สำรอง / กู้คืนข้อมูล (ทุก key ใน localStorage ของแอป) ===== */
-const BACKUP_KEYS=['ssc_hist','ssc_watch','ssc_rate_periods_v2','ssc_comm_cfg'];
+const BACKUP_KEYS=['ssc_hist','ssc_watch','ssc_rate_periods_v2','ssc_comm_cfg','ssc_deleted_months'];
 function exportData(){
   const dump={_app:'ssc-commission-checker',_ver:1,_at:new Date().toISOString(),data:{}};
   BACKUP_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) dump.data[k]=v; });
@@ -2602,7 +2600,8 @@ function importData(file){
     if(!confirm('กู้คืนจะเขียนทับข้อมูลปัจจุบันทั้งหมด (แอปจะดาวน์โหลดสำรองข้อมูลปัจจุบันให้ก่อน) ยืนยันไหม?')) return;
     takeSnapshot('ก่อนกู้คืนจากไฟล์'); exportData();
     entries.forEach(([k,v])=>localStorage.setItem(k,String(v)));
-    initSettings(); loadEditor(); renderDashboard(); renderSnapInfo(); pushState();
+    initSettings(); loadEditor(); renderDashboard(); renderSnapInfo(); lsSet(LS_DIRTY,'1');
+    if(getCfg().url) pullState(()=>{ loadEditor(); renderDashboard(); renderSnapInfo(); if(!$('#tab-history').classList.contains('hide')) loadHistory(); }); else updateDataStatus();
     toast('กู้คืนข้อมูลสำเร็จ ✓ (ไปดูที่แท็บประวัติได้เลย)');
   }catch(err){ toast('กู้คืนไม่สำเร็จ: '+err.message,'err'); } };
   rd.readAsText(file);
